@@ -1,0 +1,25 @@
+version: '3.5'
+
+services:
+    proxy:
+        image: jwilder/nginx-proxy
+        ports:
+        - 80:80
+        volumes:
+        - /var/run/docker.sock:/tmp/docker.sock:ro
+        networks:
+        - default
+        - proxy
+    web:
+        image: duckbrain/beluga
+        build: ../..
+        ports:
+        - 8080
+        environment:
+             VIRTUAL_HOST: '~^([0-9]+\.){4}xip\.io'
+        volumes:
+        - ./conf/:/etc/beluga/
+
+networks:
+    proxy:
+        name: beluga-proxy
