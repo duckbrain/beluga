@@ -11,8 +11,8 @@ Pulls the latest build, then uses it as a cache, to build and push a docker imag
 
 Sends the `docker-compose.yaml` file to the belugad server, where it will be loaded.
 
-## belugad
+## `beluga serve`
 
-belugad is the deamon to run with nginx-proxy and, optionally, nginx-proxy-companion. The only time you'll need to interact with this is to set it up, and get API keys.
+Starts the deamon to run with nginx-proxy and, optionally, nginx-proxy-companion. The only time you'll need to interact with this is to set it up.
 
 

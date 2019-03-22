@@ -1,4 +1,6 @@
 Dockerfile
 tests/
+conf/
 README.md
+docker-compose.yaml
 

@@ -1,0 +1,36 @@
+version: '3.5'
+
+services:
+  beluga:
+    image: duckbrain/beluga
+    build: .
+    command: beluga serve
+    ports:
+    - 8080
+    environment:
+       VIRTUAL_HOST: beluga.*,localhost
+    volumes:
+    - ./conf/:/etc/beluga/
+    networks:
+    - beluga
+  proxy:
+    image: jwilder/nginx-proxy
+    ports:
+    - 80:80
+    volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+    - beluga
+    - proxy
+  hello:
+    image: nginxdemos/hello
+    environment:
+      VIRTUAL_HOST: hello.*
+    ports:
+    - 80
+    networks:
+    - proxy
+
+networks:
+  proxy:
+  beluga:
