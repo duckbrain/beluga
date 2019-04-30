@@ -1,0 +1,8 @@
+<div class="page-header">
+  <h1>New Stack</h1>
+</div>
+
+<%= form_for(stack, {action: stacksPath(), method: "POST"}) { %>
+  <%= partial("stacks/form.html") %>
+  <a href="<%= stacksPath() %>" class="btn btn-warning" data-confirm="Are you sure?">Cancel</a>
+<% } %>

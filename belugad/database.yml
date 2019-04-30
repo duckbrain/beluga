@@ -1,0 +1,11 @@
+development:
+  dialect: "sqlite3"
+  database: /home/jonathan/src/github.com/duckbrain/beluga/belugad_belugad_development.sqlite
+
+test:
+  dialect: "sqlite3"
+  database: /home/jonathan/src/github.com/duckbrain/beluga/belugad_belugad_test.sqlite
+
+production:
+  dialect: "sqlite3"
+  database: /home/jonathan/src/github.com/duckbrain/beluga/belugad_belugad_production.sqlite

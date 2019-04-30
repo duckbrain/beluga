@@ -1,0 +1,33 @@
+<div class="page-header">
+  <h1>Stacks</h1>
+</div>
+<ul class="list-unstyled list-inline">
+  <li><a href="<%= newStacksPath() %>" class="btn btn-primary">Create New Stack</a></li>
+</ul>
+
+<table class="table table-striped">
+  <thead>
+  <th>Name</th>
+    <th>Key</th>
+    <th>&nbsp;</th>
+  </thead>
+  <tbody>
+    <%= for (stack) in stacks { %>
+      <tr>
+      <td><%= stack.Name %></td>
+        <td><%= stack.Key %></td>
+        <td>
+          <div class="pull-right">
+            <a href="<%= stackPath({ stack_id: stack.ID }) %>" class="btn btn-info">View</a>
+            <a href="<%= editStackPath({ stack_id: stack.ID }) %>" class="btn btn-warning">Edit</a>
+            <a href="<%= stackPath({ stack_id: stack.ID }) %>" data-method="DELETE" data-confirm="Are you sure?" class="btn btn-danger">Destroy</a>
+          </div>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<div class="text-center">
+  <%= paginator(pagination) %>
+</div>
