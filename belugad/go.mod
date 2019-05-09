@@ -27,4 +27,5 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/unrolled/secure v1.0.0
+	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 )

@@ -10,6 +10,7 @@ require (
 	github.com/gobuffalo/packr/v2 v2.2.0 // indirect
 	github.com/gobuffalo/pop v4.11.0+incompatible // indirect
 	github.com/gobuffalo/x v0.0.0-20190224155809-6bb134105960 // indirect
+	github.com/harlow/authtoken v0.0.0-20151218063325-ef4b3666db99 // indirect
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/markbates/going v1.0.3 // indirect
 	github.com/unrolled/secure v1.0.0 // indirect

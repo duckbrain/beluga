@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/gobuffalo/pop"
@@ -18,6 +19,7 @@ type Stack struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	Name      string    `json:"name" db:"name"`
+	Data      string    `json:"data" db:"data"`
 }
 
 const KeyLength = 70
@@ -54,18 +56,10 @@ func (s Stacks) String() string {
 func (s *Stack) Validate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.Validate(
 		&validators.StringIsPresent{Field: s.Name, Name: "Name"},
-		&validators.StringIsPresent{Field: s.Key, Name: "Key"},
+		validate.ValidatorFunc(func(errors *validate.Errors) {
+			if strings.HasPrefix(s.Name, "beluga") {
+				errors.Add("Name", "Cannot have \"beluga\" prefix.")
+			}
+		}),
 	), nil
-}
-
-// ValidateCreate gets run every time you call "pop.ValidateAndCreate" method.
-// This method is not required and may be deleted.
-func (s *Stack) ValidateCreate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
-}
-
-// ValidateUpdate gets run every time you call "pop.ValidateAndUpdate" method.
-// This method is not required and may be deleted.
-func (s *Stack) ValidateUpdate(tx *pop.Connection) (*validate.Errors, error) {
-	return validate.NewErrors(), nil
 }
