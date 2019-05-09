@@ -18,7 +18,6 @@ type Stack struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	Name      string    `json:"name" db:"name"`
-	Key       string    `json:"key" db:"key"`
 }
 
 const KeyLength = 70

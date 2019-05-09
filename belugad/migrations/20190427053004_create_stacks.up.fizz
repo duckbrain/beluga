@@ -1,5 +1,4 @@
 create_table("stacks") {
 	t.Column("id", "uuid", {primary: true})
 	t.Column("name", "string", {unique: true})
-	t.Column("key", "string", {})
 }

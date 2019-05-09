@@ -12,6 +12,7 @@ require (
 	github.com/gobuffalo/mw-forcessl v0.0.0-20190224202501-6d1ef7ffb276
 	github.com/gobuffalo/mw-i18n v0.0.0-20190224203426-337de00e4c33
 	github.com/gobuffalo/mw-paramlogger v0.0.0-20190224201358-0d45762ab655
+	github.com/gobuffalo/nulls v0.0.0-20190305142546-85f3c9250d87
 	github.com/gobuffalo/packr v1.24.0
 	github.com/gobuffalo/packr/v2 v2.1.0
 	github.com/gobuffalo/pop v4.10.0+incompatible
@@ -23,6 +24,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/markbates/going v1.0.3 // indirect
 	github.com/markbates/grift v1.0.5
+	github.com/pkg/errors v0.8.1
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/unrolled/secure v1.0.0
 )
