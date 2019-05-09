@@ -1,7 +1,10 @@
 package models
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/gobuffalo/pop"
@@ -16,6 +19,20 @@ type Stack struct {
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	Name      string    `json:"name" db:"name"`
 	Key       string    `json:"key" db:"key"`
+}
+
+const KeyLength = 70
+
+func GenerateKey(length int) (string, error) {
+	b := make(([]byte), length)
+	n, err := rand.Read(b)
+	if n < length {
+		return "", errors.New("Not enough random bytes")
+	}
+	if err != nil {
+		return "", err
+	}
+	return base64.RawStdEncoding.EncodeToString(b), nil
 }
 
 // String is not required by pop and may be deleted

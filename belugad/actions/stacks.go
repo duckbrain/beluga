@@ -38,13 +38,25 @@ func DeployAuthMiddleware(next buffalo.Handler) buffalo.Handler {
 			return jsonError(c, 404, "Stack not found")
 		}
 
+		c.Set("stack", stack)
+
 		return next(c)
 	}
 }
 
 func StackDeploy(c buffalo.Context) error {
-	return nil
+	stack := c.Value("stack").(models.Stack)
+	deployment := models.Deployment{}
+	if err := c.Bind(&deployment); err != nil {
+		return err
+	}
+	return deployer.Deploy(stack.Name, deployment)
 }
 func StackDestroy(c buffalo.Context) error {
-	return nil
+	stack := c.Value("stack").(models.Stack)
+	deployment := models.Deployment{}
+	if err := c.Bind(deployment); err != nil {
+		return err
+	}
+	return deployer.Deploy(stack.Name, deployment)
 }

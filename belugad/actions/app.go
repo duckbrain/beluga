@@ -19,6 +19,12 @@ var ENV = envy.Get("GO_ENV", "development")
 var app *buffalo.App
 var T *i18n.Translator
 
+var deployer models.Deployer = models.Compose{
+	Cache:    envy.Get("STACK_DIR", "stacks"),
+	Executor: envy.Get("STACK_EXECUTOR", "sudo"),
+	Command:  envy.Get("STACK_COMMAND", "/usr/bin/docker-compose"),
+}
+
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
 // application.

@@ -20,6 +20,7 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/harlow/authtoken v0.0.0-20151218063325-ef4b3666db99
 	github.com/jackc/pgx v3.3.0+incompatible // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/markbates/going v1.0.3 // indirect
 	github.com/markbates/grift v1.0.5
 	github.com/spf13/afero v1.2.1 // indirect
