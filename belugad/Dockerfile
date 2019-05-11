@@ -10,7 +10,7 @@ ADD . .
 RUN go get $(go list ./... | grep -v /vendor/)
 RUN buffalo build --static -o /bin/app
 
-FROM docker/compose
+FROM docker/compose:1.24.0
 
 COPY --from=builder /bin/app /bin/belugad
 ENV GO_ENV=production

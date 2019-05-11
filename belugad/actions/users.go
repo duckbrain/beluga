@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"../../src/github.com/duckbrain/beluga/belugad/models"
+	"github.com/duckbrain/beluga/belugad/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop"
 	"github.com/pkg/errors"
