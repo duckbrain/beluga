@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 "username" TEXT,
 "password_hash" TEXT NOT NULL,
 "stack_pattern" TEXT NOT NULL,
-"key_hash" TEXT NOT NULL,
+"key" TEXT NOT NULL,
 "is_admin" bool NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL

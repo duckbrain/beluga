@@ -1,4 +1,4 @@
-module github.com/duckbrain/beluga
+module github.com/duckbrain/beluga/belugad
 
 go 1.12
 

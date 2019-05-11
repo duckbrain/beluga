@@ -19,9 +19,9 @@ type User struct {
 	UpdatedAt    time.Time    `json:"updated_at" db:"updated_at"`
 	Username     nulls.String `json:"username" db:"username"` // Can ommit username and password, then is used for deploys only
 	PasswordHash string       `json:"password_hash" db:"password_hash"`
-	StackPattern string       `json:"stack_pattern" db:"stack_pattern"` // Regex to match allowed stack names
-	KeyHash      string       `json:"key_hash" db:"key_hash"`           // Bcrypt hash of key that can only be used for deploy and teardown
 	IsAdmin      bool         `json:"is_admin" db:"is_admin"`           // Is allowed to create/edit users
+	Key          string       `json:"key" db:"key"`                     // Bcrypt hash of key that can only be used for deploy and teardown
+	StackPattern string       `json:"stack_pattern" db:"stack_pattern"` // Regex to match allowed stack names
 }
 
 func checkPwd(pwd, hash string) (needsUpdate bool, err error) {
@@ -37,24 +37,27 @@ func genPwd(pwd string) (string, error) {
 }
 
 func (u User) VerifyKey(key string) (needsUpdate bool, err error) {
-	return checkPwd(key, u.KeyHash)
+	if key != u.Key {
+		err = errors.New("Keys don't match")
+	}
+	return
 }
 
 func (u User) VerifyPassword(password string) (needsUpdate bool, err error) {
 	return checkPwd(password, u.PasswordHash)
 }
 
-func (u *User) GenerateKey() (string, error) {
-	key, err := GenerateKey(KeyLength)
-	if err != nil {
-		return "", errors.WithStack(err)
+func (u *User) SetPassword(pwd string) (err error) {
+	u.PasswordHash, err = genPwd(pwd)
+	return
+}
+
+func (u *User) GenerateKey() (key string, err error) {
+	key, err = GenerateKey(KeyLength)
+	if err == nil {
+		u.Key = key
 	}
-	hash, err := genPwd(key)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	u.KeyHash = hash
-	return key, nil
+	return
 }
 
 // String is not required by pop and may be deleted

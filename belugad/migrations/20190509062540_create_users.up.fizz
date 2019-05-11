@@ -3,6 +3,6 @@ create_table("users") {
 	t.Column("username", "string", {null: true, unique: true})
 	t.Column("password_hash", "string", {})
 	t.Column("stack_pattern", "string", {})
-	t.Column("key_hash", "string", {})
+	t.Column("key", "string", {})
 	t.Column("is_admin", "bool", {})
 }
