@@ -13,6 +13,7 @@ require (
 	github.com/harlow/authtoken v0.0.0-20151218063325-ef4b3666db99 // indirect
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/markbates/going v1.0.3 // indirect
+	github.com/spf13/cobra v0.0.3
 	github.com/unrolled/secure v1.0.0 // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 )

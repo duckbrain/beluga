@@ -1,10 +1,7 @@
 package main
 
-import (
-	"log"
-	"net/http"
-)
+import "github.com/duckbrain/beluga/cmd"
 
 func main() {
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	cmd.Execute()
 }
