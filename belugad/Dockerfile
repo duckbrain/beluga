@@ -1,4 +1,4 @@
-FROM gobuffalo/buffalo:v0.14.2 as builder
+FROM gobuffalo/buffalo:v0.14.3 as builder
 
 RUN mkdir -p $GOPATH/src/github.com/duckbrain/beluga/belugad
 WORKDIR $GOPATH/src/github.com/duckbrain/beluga/belugad

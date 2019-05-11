@@ -20,9 +20,9 @@ var app *buffalo.App
 var T *i18n.Translator
 
 var deployer models.Deployer = models.Compose{
-	Cache:    envy.Get("STACK_DIR", "stacks"),
-	Executor: envy.Get("STACK_EXECUTOR", "sudo"),
-	Command:  envy.Get("STACK_COMMAND", "/usr/bin/docker-compose"),
+	Cache:    envy.Get("BELUGA_STACK_DIR", "stacks"),
+	Executor: envy.Get("BELUGA_STACK_EXECUTOR", "sudo"),
+	Command:  envy.Get("BELUGA_STACK_COMMAND", "/usr/bin/docker-compose"),
 }
 
 // App is where all routes and middleware for buffalo
@@ -60,12 +60,11 @@ func App() *buffalo.App {
 		app.Use(translations())
 
 		app.GET("/", HomeHandler)
-		app.GET("/beluga", HomeHandler)
-		app.PUT("/{stack:.*}", DeployAuthMiddleware(StackDeploy))
-		app.DELETE("/{stack:.*}", DeployAuthMiddleware(StackDestroy))
+		app.PUT("/stack//{stack:.*}", DeployAuthMiddleware(StackDeploy))
+		app.DELETE("/stack/{stack:.*}", DeployAuthMiddleware(StackDestroy))
 
-		app.Resource("/beluga/users", UsersResource{})
-		app.ServeFiles("/beluga/", assetsBox) // serve files from the public directory
+		app.Resource("/users", UsersResource{})
+		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 
 	return app

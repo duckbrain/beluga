@@ -1,19 +1,15 @@
 package models
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
-	"strings"
+
+	"github.com/duckbrain/beluga/beluga"
 )
 
-type Deployment struct {
-	Env         map[string]string `json:"env"`
-	ComposeFile string            `json:"compose_file"`
-}
+type Deployment = beluga.Deployment
 
 type Deployer interface {
 	Deploy(stackName string, d Deployment) error
@@ -24,16 +20,6 @@ type Compose struct {
 	Cache    string
 	Executor string
 	Command  string
-}
-
-func (d Deployment) Envfile() string {
-	lines := make([]string, 0, len(d.Env))
-	for k, v := range d.Env {
-		lines = append(lines, fmt.Sprintf(`%s=%s`, k, v))
-	}
-	sort.Strings(lines)
-	return strings.Join(lines, "\n")
-
 }
 
 func (c Compose) write(stackName, fileName, contents string) error {
