@@ -1,6 +1,11 @@
 version: '3.5'
 
 services:
+  beluga:
+    image: duckbrain/beluga
+    build: .
+    networks:
+    - proxy
   belugad:
     image: duckbrain/belugad
     build: ./belugad

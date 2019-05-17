@@ -1,9 +1,7 @@
 conf/
-/beluga
 *.sqlite
 vendor/
-**/*.log
-**/*.sqlite
+*.log
 .idea/
 bin/
 tmp/

@@ -17,4 +17,4 @@ ENV GO_ENV=production
 ENV ADDR=0.0.0.0
 EXPOSE 3000
 
-CMD /bin/belugad migrate; /bin/belugad
+CMD /bin/bash -c '/bin/belugad migrate; /bin/belugad'
