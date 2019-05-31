@@ -1,4 +1,4 @@
-// Package beluga provides shared functionality for the server and CLI.
+// Package beluga provides go Client library for the beluga server.
 package beluga
 
 import (
@@ -16,13 +16,13 @@ type Deployment struct {
 	ComposeFile string            `json:"compose_file"`
 }
 
-func (c Client) http(method, stackName string, d *Deployment) error {
+func (c Client) http(method, domain string, d *Deployment) error {
 	return errors.New("Not implemented")
 }
 
-func (c Client) Deploy(stackName string, d Deployment) error {
-	return c.http("PUT", stackName, &d)
+func (c Client) Deploy(domain string, d Deployment) error {
+	return c.http("PUT", domain, &d)
 }
-func (c Client) Teardown(stackName string) error {
-	return c.http("DELETE", stackName, nil)
+func (c Client) Teardown(domain string) error {
+	return c.http("DELETE", domain, nil)
 }

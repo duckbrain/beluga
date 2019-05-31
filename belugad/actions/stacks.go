@@ -21,19 +21,19 @@ func DeployAuthMiddleware(next buffalo.Handler) buffalo.Handler {
 		if err != nil {
 			return jsonError(c, 400, "Key not provided")
 		}
-		stackName := c.Param("stack")
-		if len(stackName) == 0 {
+		domain := c.Param("domain")
+		if len(domain) == 0 {
 			return jsonError(c, 404, "Stack name not provided")
 		}
-		if strings.HasPrefix(stackName, "beluga") {
+		if strings.HasPrefix(domain, "beluga") {
 			return jsonError(c, 404, "\"beluga\" prefix in stack name is reserved for internal use")
 		}
-		c.Logger().Debug("stack: ", stackName)
+		c.Logger().Debug("stack: ", domain)
 		c.Logger().Debug("token: ", token)
 
 		tx := c.Value("tx").(*pop.Connection)
 		stack := models.Stack{}
-		err = tx.Where("name = ?", stackName).First(&stack)
+		err = tx.Where("domain = ?", domain).First(&stack)
 		if err != nil {
 			return jsonError(c, 404, "Stack not found")
 		}

@@ -16,8 +16,8 @@ type Deployment struct {
 }
 
 type Deployer interface {
-	Deploy(stackName string, d Deployment) error
-	Teardown(stackName string, d Deployment) error
+	Deploy(domain string, d Deployment) error
+	Teardown(domain string, d Deployment) error
 }
 
 type Compose struct {
@@ -36,29 +36,29 @@ func (d Deployment) Envfile() string {
 
 }
 
-func (c Compose) write(stackName, fileName, contents string) error {
-	return ioutil.WriteFile(filepath.Join(c.Cache, stackName, fileName), []byte(contents), os.ModePerm)
+func (c Compose) write(domain, fileName, contents string) error {
+	return ioutil.WriteFile(filepath.Join(c.Cache, domain, fileName), []byte(contents), os.ModePerm)
 }
 
-func (c Compose) run(stackName string, d Deployment, args ...string) error {
-	if err := os.MkdirAll(filepath.Join(c.Cache, stackName), os.ModePerm); err != nil {
+func (c Compose) run(domain string, d Deployment, args ...string) error {
+	if err := os.MkdirAll(filepath.Join(c.Cache, domain), os.ModePerm); err != nil {
 		return err
 	}
-	if err := c.write(stackName, "docker-compose.yaml", d.ComposeFile); err != nil {
+	if err := c.write(domain, "docker-compose.yaml", d.ComposeFile); err != nil {
 		return err
 	}
-	if err := c.write(stackName, ".env", d.Envfile()); err != nil {
+	if err := c.write(domain, ".env", d.Envfile()); err != nil {
 		return err
 	}
 	cmd := exec.Command(c.Executor, args...)
-	cmd.Dir = filepath.Join(c.Cache, stackName)
+	cmd.Dir = filepath.Join(c.Cache, domain)
 	return cmd.Run()
 }
 
-func (c Compose) Deploy(stackName string, d Deployment) error {
-	return c.run(stackName, d, c.Command, "up", "-d")
+func (c Compose) Deploy(domain string, d Deployment) error {
+	return c.run(domain, d, c.Command, "up", "-d")
 }
 
-func (c Compose) Teardown(stackName string, d Deployment) error {
-	return c.run(stackName, d, c.Command, "down")
+func (c Compose) Teardown(domain string, d Deployment) error {
+	return c.run(domain, d, c.Command, "down")
 }

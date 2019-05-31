@@ -60,8 +60,8 @@ func App() *buffalo.App {
 		app.Use(translations())
 
 		app.GET("/", HomeHandler)
-		app.PUT("/stack//{stack:.*}", DeployAuthMiddleware(StackDeploy))
-		app.DELETE("/stack/{stack:.*}", DeployAuthMiddleware(StackDestroy))
+		app.PUT("/stack//{domain:.*}", DeployAuthMiddleware(StackDeploy))
+		app.DELETE("/stack/{domain:.*}", DeployAuthMiddleware(StackDestroy))
 
 		// app.Resource("/users", UsersResource{})
 		app.ServeFiles("/", assetsBox) // serve files from the public directory

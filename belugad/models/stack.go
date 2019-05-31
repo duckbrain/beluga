@@ -18,7 +18,7 @@ type Stack struct {
 	ID        uuid.UUID `json:"id" db:"id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	Name      string    `json:"name" db:"name"`
+	Domain    string    `json:"domain" db:"domain"`
 	Data      string    `json:"data" db:"data"`
 }
 
@@ -55,10 +55,10 @@ func (s Stacks) String() string {
 // This method is not required and may be deleted.
 func (s *Stack) Validate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.Validate(
-		&validators.StringIsPresent{Field: s.Name, Name: "Name"},
+		&validators.StringIsPresent{Field: s.Domain, Name: "Domain"},
 		validate.ValidatorFunc(func(errors *validate.Errors) {
-			if strings.HasPrefix(s.Name, "beluga") {
-				errors.Add("Name", "Cannot have \"beluga\" prefix.")
+			if strings.HasPrefix(s.Domain, "beluga") {
+				errors.Add("Domain", "Cannot have \"beluga\" prefix.")
 			}
 		}),
 	), nil
