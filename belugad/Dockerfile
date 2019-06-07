@@ -1,20 +1,19 @@
 FROM gobuffalo/buffalo:v0.14.3 as builder
 
-RUN mkdir -p $GOPATH/src/github.com/duckbrain/beluga/belugad
-WORKDIR $GOPATH/src/github.com/duckbrain/beluga/belugad
+RUN mkdir -p /code
+WORKDIR /code/
 
-ADD package.json .
-ADD yarn.lock .
-RUN yarn install --no-progress
-ADD . .
-RUN go get $(go list ./... | grep -v /vendor/)
+ENV GO111MODULE=on GOARCH=amd64 GOOS=linux
+ADD package.json yarn.lock go.mod go.sum /code/
+RUN yarn install --no-progress && go mod download
+ADD . /code/
 RUN buffalo build --static -o /bin/app
 
 FROM docker/compose:1.24.0
 
-COPY --from=builder /bin/app /bin/belugad
 ENV GO_ENV=production
 ENV ADDR=0.0.0.0
 EXPOSE 3000
+COPY --from=builder /bin/app /bin/belugad
 
 CMD /bin/bash -c '/bin/belugad migrate; /bin/belugad'

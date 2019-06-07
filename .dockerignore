@@ -1,6 +1,7 @@
 Dockerfile
 tests/
 conf/
+belugad/
 README.md
 docker-compose.yaml
 

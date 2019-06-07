@@ -23,10 +23,10 @@ func DeployAuthMiddleware(next buffalo.Handler) buffalo.Handler {
 		}
 		domain := c.Param("domain")
 		if len(domain) == 0 {
-			return jsonError(c, 404, "Stack name not provided")
+			return jsonError(c, 404, "Stack domain not provided")
 		}
 		if strings.HasPrefix(domain, "beluga") {
-			return jsonError(c, 404, "\"beluga\" prefix in stack name is reserved for internal use")
+			return jsonError(c, 404, "\"beluga\" prefix in stack domain is reserved for internal use")
 		}
 		c.Logger().Debug("stack: ", domain)
 		c.Logger().Debug("token: ", token)
@@ -50,7 +50,7 @@ func StackDeploy(c buffalo.Context) error {
 	if err := c.Bind(&deployment); err != nil {
 		return err
 	}
-	return deployer.Deploy(stack.Name, deployment)
+	return deployer.Deploy(stack.Domain, deployment)
 }
 func StackDestroy(c buffalo.Context) error {
 	stack := c.Value("stack").(models.Stack)
@@ -58,5 +58,5 @@ func StackDestroy(c buffalo.Context) error {
 	if err := c.Bind(deployment); err != nil {
 		return err
 	}
-	return deployer.Deploy(stack.Name, deployment)
+	return deployer.Deploy(stack.Domain, deployment)
 }
