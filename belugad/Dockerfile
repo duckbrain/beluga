@@ -16,4 +16,5 @@ ENV ADDR=0.0.0.0
 EXPOSE 3000
 COPY --from=builder /bin/app /bin/belugad
 
-CMD /bin/bash -c '/bin/belugad migrate; /bin/belugad'
+ENTRYPOINT []
+CMD /bin/sh -c '/bin/belugad migrate; /bin/belugad'

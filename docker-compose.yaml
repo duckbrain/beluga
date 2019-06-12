@@ -10,9 +10,10 @@ services:
     image: duckbrain/belugad
     build: ./belugad
     ports:
-    - 8080
+    - 3000
     environment:
        VIRTUAL_HOST: beluga.*,localhost
+       GO_ENV: development
     volumes:
     - ./conf/:/etc/beluga/
     networks:
