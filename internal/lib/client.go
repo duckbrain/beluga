@@ -1,5 +1,5 @@
-// Package beluga provides go Client library for the beluga server.
-package beluga
+// Package lib provides go Client library for the beluga server.
+package lib
 
 import (
 	"errors"

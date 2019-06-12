@@ -3,13 +3,13 @@ package cmd
 import (
 	"net/http"
 
-	"github.com/duckbrain/beluga/beluga"
+	"github.com/duckbrain/beluga/internal/lib"
 )
 
 var dsn string
 
-func belugaClient() *beluga.Client {
-	return &beluga.Client{
+func belugaClient() *lib.Client {
+	return &lib.Client{
 		DSN:    dsn,
 		Client: http.DefaultClient,
 	}

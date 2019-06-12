@@ -14,14 +14,14 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID    `json:"id" db:"id"`
-	CreatedAt    time.Time    `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at" db:"updated_at"`
-	Username     nulls.String `json:"username" db:"username"` // Can ommit username and password, then is used for deploys only
-	PasswordHash string       `json:"password_hash" db:"password_hash"`
-	IsAdmin      bool         `json:"is_admin" db:"is_admin"`           // Is allowed to create/edit users
-	Key          string       `json:"key" db:"key"`                     // Bcrypt hash of key that can only be used for deploy and teardown
-	StackPattern string       `json:"stack_pattern" db:"stack_pattern"` // Regex to match allowed stack names
+	ID            uuid.UUID    `json:"id" db:"id"`
+	CreatedAt     time.Time    `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at" db:"updated_at"`
+	Username      nulls.String `json:"username" db:"username"` // Can ommit username and password, then is used for deploys only
+	PasswordHash  string       `json:"password_hash" db:"password_hash"`
+	IsAdmin       bool         `json:"is_admin" db:"is_admin"`             // Is allowed to create/edit users
+	Key           string       `json:"key" db:"key"`                       // Can only be used for deploy and teardown
+	DomainPattern string       `json:"domain_pattern" db:"domain_pattern"` // Regex to match allowed stack names
 }
 
 func checkPwd(pwd, hash string) (needsUpdate bool, err error) {
