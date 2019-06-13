@@ -36,8 +36,11 @@ func (e Env) Client() Client {
 	}
 }
 
-func DeploymentFromEnv(e Env) (Deployment, err) {
-
+func (e Env) Deployment() (Deployment, error) {
+	return Deployment{
+		ComposeFile: "",
+		Env:         e,
+	}, nil
 }
 
 type EnvReader interface {
