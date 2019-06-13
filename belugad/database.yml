@@ -8,4 +8,4 @@ test:
 
 production:
   dialect: "sqlite3"
-  database: ./belugad_production.sqlite
+  database: {{env "BELUGAD_DATA"}}/belugad_production.sqlite

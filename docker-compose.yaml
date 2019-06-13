@@ -6,6 +6,8 @@ services:
     build: .
     networks:
     - proxy
+    depends_on:
+    - belugad
   belugad:
     image: duckbrain/belugad
     build: ./belugad

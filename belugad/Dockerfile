@@ -11,9 +11,12 @@ RUN buffalo build --static -o /bin/app
 
 FROM docker/compose:1.24.0
 
-ENV GO_ENV=production
-ENV ADDR=0.0.0.0
+RUN apk add --no-cache sudo
+
+ENV GO_ENV=production ADDR=0.0.0.0 BELUGAD_DATA=/var/lib/belugad
+VOLUME [ "/var/lib/belugad" ]
 EXPOSE 3000
+COPY ./config/sudoers /etc/sudoers.d/belugad
 COPY --from=builder /bin/app /bin/belugad
 
 ENTRYPOINT []
