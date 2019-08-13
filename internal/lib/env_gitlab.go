@@ -27,6 +27,7 @@ func (g gitlabEnv) EnvRead() Env {
 	}
 
 	return Env{
+		varEnvironment:      env,
 		varRegistry:         envy.Get("CI_REGISTRY", ""),
 		varRegistryUsername: envy.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
 		varRegistryPassword: envy.Get("CI_REGISTRY_PASSWORD", ""),

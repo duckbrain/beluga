@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"text/template"
 
 	"github.com/gobuffalo/flect"
 )
 
-var names = []string{
+var names = sort.StringSlice{
 	"Application",
 	"Domain",
 	"Environment",
@@ -35,9 +36,21 @@ const (
 	{{ . | VarName }} = "{{ . | EnvName }}"
 	{{- end }}
 )
+
+var knownVarNames = []string{
+	{{range .}}
+	{{- .|VarName}},
+{{end}} }
+
+{{ range .}}
+func (e Env) {{ . }}() string {
+	return e[{{ . | VarName }}]
+}
+{{ end }}
 `))
 
 func main() {
+	sort.Sort(names)
 	const filename = "../lib/var.go"
 	output, err := os.Create(filename)
 	if err != nil {

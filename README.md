@@ -25,10 +25,6 @@ Sends the `docker-compose.yaml` file to the belugad server, where it will be loa
 
 Instructs belugad to teardown the stack deployed for a `beluga build` command.
 
-### `belugad serve`
-
-Starts the deamon to run with nginx-proxy and, optionally, nginx-proxy-companion. The only time you'll need to interact with this is to set it up.
-
 ## Environment Variables
 
 ### `beluga` Client variables used in CI
