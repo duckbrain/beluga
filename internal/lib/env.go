@@ -1,47 +1,11 @@
 package lib
 
 import (
-	"github.com/gobuffalo/envy"
-)
-
-const (
-	envDSN               = "DSN"
-	envDomain            = "DOMAIN"
-	envDockerUsername    = "DOCKER_USERNAME"
-	envDockerPassword    = "DOCKER_PASSWORD"
-	envDockerImage       = "DOCKER_IMAGE"
-	envGitRefName        = "GIT_REF_NAME"
-	envGitDefaultRefName = "GIT_DEFAULT_REF_NAME"
+	"os"
+	"strings"
 )
 
 type Env map[string]string
-
-func (e Env) DSN() string {
-	return e[envDSN]
-}
-
-func (e Env) Domain() string {
-	return e[envDomain]
-}
-
-func (e Env) DockerCreds() (username, password string) {
-	username = e[envDockerUsername]
-	password = e[envDockerPassword]
-	return
-}
-
-func (e Env) Client() Client {
-	return Client{
-		DSN: e[envDSN],
-	}
-}
-
-func (e Env) Deployment() (Deployment, error) {
-	return Deployment{
-		ComposeFile: "",
-		Env:         e,
-	}, nil
-}
 
 type EnvReader interface {
 	EnvRead() Env
@@ -66,21 +30,18 @@ func (envs compositeEnv) EnvRead() Env {
 	return vals
 }
 
-var envs = compositeEnv{belugaEnv("BELUGA_")}
+var envs = compositeEnv{belugaEnv("")}
 
 type belugaEnv string
 
 func (prefix belugaEnv) EnvRead() Env {
 	vals := make(Env)
-	keys := []string{
-		envDockerUsername, envDockerPassword, envDockerImage,
-		envGitRefName, envGitDefaultRefName,
-		envDomain,
-	}
-	for _, key := range keys {
-		val := envy.Get(string(prefix)+key, "")
-		if len(val) > 0 {
-			vals[key] = val
+	for _, line := range os.Environ() {
+		i := strings.IndexRune(line, '=')
+		key := line[:i]
+		value := line[i+1:]
+		if strings.HasPrefix(key, string(prefix)) {
+			vals[key] = value
 		}
 	}
 	return vals

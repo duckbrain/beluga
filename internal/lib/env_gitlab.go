@@ -2,6 +2,7 @@ package lib
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/gobuffalo/envy"
 )
@@ -9,16 +10,28 @@ import (
 type gitlabEnv struct{}
 
 func (g gitlabEnv) EnvRead() Env {
+	const defaultBranch = "master"
+
 	if envy.Get("GITLAB_CI", "") == "" {
 		return nil
 	}
 
+	var env = "review"
+	var refName = envy.Get("CI_COMMIT_REF_NAME", "")
+
+	if refName == defaultBranch {
+		env = "staging"
+	}
+	if strings.HasPrefix(refName, "v") {
+		env = "production"
+	}
+
 	return Env{
-		envDockerUsername: envy.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
-		envDockerPassword: envy.Get("CI_REGISTRY_PASSWORD", ""),
-		envDockerImage:    envy.Get("CI_REGISTRY_IMAGE", ""),
-		envGitRefName:     envy.Get("CI_COMMIT_REF_NAME", ""),
-		envDomain:         g.Domain(),
+		varRegistry:         envy.Get("CI_REGISTRY", ""),
+		varRegistryUsername: envy.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
+		varRegistryPassword: envy.Get("CI_REGISTRY_PASSWORD", ""),
+		varImage:            envy.Get("CI_REGISTRY_IMAGE", ""),
+		varDomain:           g.Domain(),
 	}
 }
 

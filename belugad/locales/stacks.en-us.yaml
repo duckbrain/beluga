@@ -1,6 +1,0 @@
-- id: "stack.created.success"
-  translation: "Stack was successfully created."
-- id: "stack.updated.success"
-  translation: "Stack was successfully updated."
-- id: "stack.destroyed.success"
-  translation: "Stack was successfully destroyed."

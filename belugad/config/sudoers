@@ -1,2 +1,0 @@
-%beluga ALL=(root) NOPASSWD:/usr/bin/docker-compose up -d
-%beluga ALL=(root) NOPASSWD:/usr/bin/docker-compose down
