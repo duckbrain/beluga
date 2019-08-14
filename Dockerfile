@@ -10,5 +10,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
 FROM alpine
 
+RUN apk add --no-cache docker docker-compose
 COPY --from=builder /code/app /usr/bin/beluga
 CMD [ "/usr/bin/beluga", "--help" ]

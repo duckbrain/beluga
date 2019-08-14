@@ -1,5 +1,4 @@
 conf/
-*.sqlite
 vendor/
 *.log
 .idea/
@@ -12,6 +11,4 @@ public/assets/
 .vscode/
 .grifter/
 .env
-/belugad/stacks
-/belugad/public/assets
 /docs/

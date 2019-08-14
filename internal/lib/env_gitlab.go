@@ -3,45 +3,39 @@ package lib
 import (
 	"net/url"
 	"strings"
-
-	"github.com/gobuffalo/envy"
 )
+
+// See https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
 
 type gitlabEnv struct{}
 
-func (g gitlabEnv) EnvRead() Env {
+func (g gitlabEnv) EnvRead(e Env) {
 	const defaultBranch = "master"
 
-	if envy.Get("GITLAB_CI", "") == "" {
-		return nil
+	if e["GITLAB_CI"] == "" {
+		return
 	}
 
-	var env = "review"
-	var refName = envy.Get("CI_COMMIT_REF_NAME", "")
-
-	if refName == defaultBranch {
-		env = "staging"
-	}
-	if strings.HasPrefix(refName, "v") {
-		env = "production"
+	var env = envReview
+	if strings.HasPrefix(e["CI_COMMIT_TAG_NAME"], "v") {
+		env = envProduction
+	} else if e["CI_COMMIT_REF_NAME"] == e.GitDefaultBranch() {
+		env = envStaging
 	}
 
-	return Env{
+	e.MergeMissing(Env{
 		varEnvironment:      env,
-		varRegistry:         envy.Get("CI_REGISTRY", ""),
-		varRegistryUsername: envy.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
-		varRegistryPassword: envy.Get("CI_REGISTRY_PASSWORD", ""),
-		varImage:            envy.Get("CI_REGISTRY_IMAGE", ""),
-		varDomain:           g.Domain(),
-	}
+		varRegistry:         e["CI_REGISTRY"],
+		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
+		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
+		varImage:            e["CI_REGISTRY_IMAGE"],
+		varDomain:           g.Domain(e),
+	})
 }
 
-func (g gitlabEnv) Domain() string {
-	e, err := envy.MustGet("CI_ENVIRONMENT_URL")
-	if err != nil {
-		return ""
-	}
-	u, err := url.Parse(e)
+func (g gitlabEnv) Domain(e Env) string {
+	s := e["CI_ENVIRONMENT_URL"]
+	u, err := url.Parse(s)
 	if err != nil {
 		return ""
 	}

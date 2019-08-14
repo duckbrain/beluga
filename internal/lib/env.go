@@ -1,16 +1,57 @@
 package lib
 
 import (
-	"os"
+	"log"
+	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/joho/godotenv"
+
+	"github.com/gobuffalo/envy"
 )
 
+const (
+	envProduction = "production"
+	envStaging    = "staging"
+	envReview     = "review"
+)
+
+var Environment = Env{
+	varDockerContext:    ".",
+	varGitDefaultBranch: "master",
+}
+
+func init() {
+	// Start with the defaults
+	e := Environment
+	// BELUGA_ prefix vars
+	belugaEnv{}.EnvRead(e)
+	// Environment specific overrides
+	belugaEnvironmentEnv(e.Environment()).EnvRead(e)
+
+	// CI environments
+	envs.EnvRead(e)
+
+	// Compute Dockerfile if not yet set
+	if e[varDockerfile] == "" {
+		e[varDockerfile] = filepath.Join(e.DockerContext(), "Dockerfile")
+	}
+}
+
 type EnvReader interface {
-	EnvRead() Env
+	EnvRead(Env)
 }
 
 type Env map[string]string
+
+func (e Env) Get(key, fallback string) string {
+	v := e[key]
+	if v == "" {
+		return fallback
+	}
+	return v
+}
 
 func (e Env) SortedKeys() []string {
 	keys := sort.StringSlice{}
@@ -32,45 +73,47 @@ func (e Env) KnownKeys() []string {
 	return []string(keys)
 }
 
-func (e Env) Merge(source Env) {
-	if source == nil {
-		return
+func (e Env) Merge(src Env) {
+	for key, value := range src {
+		if value != "" {
+			e[key] = value
+		}
 	}
-	for key, value := range source {
+}
+
+func (e Env) MergeMissing(src Env) {
+	for key, value := range src {
 		if e[key] == "" && value != "" {
 			e[key] = value
 		}
 	}
 }
 
-var envs = compositeEnv{belugaEnv("")}
-
-func ParseEnv() Env {
-	return envs.EnvRead()
-}
+var envs = compositeEnv{}
 
 type compositeEnv []EnvReader
 
-func (envs compositeEnv) EnvRead() Env {
-	vals := make(Env)
-	for _, envReader := range envs {
-		env := envReader.EnvRead()
-		vals.Merge(env)
+func (c compositeEnv) EnvRead(e Env) {
+	for _, r := range c {
+		r.EnvRead(e)
 	}
-	return vals
 }
 
-type belugaEnv string
+type belugaEnv struct{}
 
-func (prefix belugaEnv) EnvRead() Env {
-	vals := make(Env)
-	for _, line := range os.Environ() {
-		i := strings.IndexRune(line, '=')
-		key := line[:i]
-		value := line[i+1:]
-		if strings.HasPrefix(key, string(prefix)) {
-			vals[key] = value
-		}
+func (belugaEnv) EnvRead(e Env) {
+	envy.Load()
+	e.Merge(Env(envy.Map()))
+}
+
+type belugaEnvironmentEnv string
+
+func (env belugaEnvironmentEnv) EnvRead(e Env) {
+	v := e["BELUGA_"+strings.ToUpper(e.Environment())]
+	s, err := godotenv.Unmarshal(v)
+	if err != nil {
+		log.Println("beluga: env parse: ", err)
 	}
-	return vals
+
+	e.Merge(Env(s))
 }
