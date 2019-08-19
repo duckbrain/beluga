@@ -17,35 +17,39 @@ const (
 	envReview     = "review"
 )
 
-var Environment = Env{
+var defaultEnv = Environment{
 	varDockerContext:    ".",
 	varGitDefaultBranch: "master",
 }
 
-func init() {
+func Env() Environment {
 	// Start with the defaults
-	e := Environment
+	e := defaultEnv.clone()
 	// BELUGA_ prefix vars
 	belugaEnv{}.EnvRead(e)
 	// Environment specific overrides
-	belugaEnvironmentEnv(e.Environment()).EnvRead(e)
+	belugaEnvironmentEnv{}.EnvRead(e)
 
 	// CI environments
-	envs.EnvRead(e)
+	for _, r := range envs {
+		r.EnvRead(e)
+	}
 
 	// Compute Dockerfile if not yet set
 	if e[varDockerfile] == "" {
 		e[varDockerfile] = filepath.Join(e.DockerContext(), "Dockerfile")
 	}
+
+	return e
 }
 
 type EnvReader interface {
-	EnvRead(Env)
+	EnvRead(Environment)
 }
 
-type Env map[string]string
+type Environment map[string]string
 
-func (e Env) Get(key, fallback string) string {
+func (e Environment) Get(key, fallback string) string {
 	v := e[key]
 	if v == "" {
 		return fallback
@@ -53,7 +57,7 @@ func (e Env) Get(key, fallback string) string {
 	return v
 }
 
-func (e Env) SortedKeys() []string {
+func (e Environment) SortedKeys() []string {
 	keys := sort.StringSlice{}
 	for key := range e {
 		keys = append(keys, key)
@@ -62,7 +66,7 @@ func (e Env) SortedKeys() []string {
 	return []string(keys)
 }
 
-func (e Env) KnownKeys() []string {
+func (e Environment) KnownKeys() []string {
 	keys := sort.StringSlice{}
 	for _, key := range knownVarNames {
 		if v, ok := e[key]; ok && v != "" {
@@ -73,7 +77,7 @@ func (e Env) KnownKeys() []string {
 	return []string(keys)
 }
 
-func (e Env) Merge(src Env) {
+func (e Environment) Merge(src Environment) {
 	for key, value := range src {
 		if value != "" {
 			e[key] = value
@@ -81,7 +85,7 @@ func (e Env) Merge(src Env) {
 	}
 }
 
-func (e Env) MergeMissing(src Env) {
+func (e Environment) MergeMissing(src Environment) {
 	for key, value := range src {
 		if e[key] == "" && value != "" {
 			e[key] = value
@@ -89,31 +93,33 @@ func (e Env) MergeMissing(src Env) {
 	}
 }
 
-var envs = compositeEnv{}
-
-type compositeEnv []EnvReader
-
-func (c compositeEnv) EnvRead(e Env) {
-	for _, r := range c {
-		r.EnvRead(e)
+func (e Environment) clone() Environment {
+	n := make(Environment)
+	for key, value := range e {
+		if value != "" {
+			n[key] = value
+		}
 	}
+	return n
 }
+
+var envs = []EnvReader{}
 
 type belugaEnv struct{}
 
-func (belugaEnv) EnvRead(e Env) {
+func (belugaEnv) EnvRead(e Environment) {
 	envy.Load()
-	e.Merge(Env(envy.Map()))
+	e.Merge(Environment(envy.Map()))
 }
 
-type belugaEnvironmentEnv string
+type belugaEnvironmentEnv struct{}
 
-func (env belugaEnvironmentEnv) EnvRead(e Env) {
+func (belugaEnvironmentEnv) EnvRead(e Environment) {
 	v := e["BELUGA_"+strings.ToUpper(e.Environment())]
 	s, err := godotenv.Unmarshal(v)
 	if err != nil {
 		log.Println("beluga: env parse: ", err)
 	}
 
-	e.Merge(Env(s))
+	e.Merge(Environment(s))
 }

@@ -12,7 +12,7 @@ var envCmd = &cobra.Command{
 	Use:   "env",
 	Short: "Print out the environment variables that beluga computes.",
 	Run: func(cmd *cobra.Command, args []string) {
-		e := lib.Environment
+		e := lib.Env()
 		var keys []string
 		if envAllKeys {
 			keys = e.SortedKeys()

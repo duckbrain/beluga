@@ -9,7 +9,7 @@ import (
 
 type gitlabEnv struct{}
 
-func (g gitlabEnv) EnvRead(e Env) {
+func (g gitlabEnv) EnvRead(e Environment) {
 	const defaultBranch = "master"
 
 	if e["GITLAB_CI"] == "" {
@@ -23,7 +23,7 @@ func (g gitlabEnv) EnvRead(e Env) {
 		env = envStaging
 	}
 
-	e.MergeMissing(Env{
+	e.MergeMissing(Environment{
 		varEnvironment:      env,
 		varRegistry:         e["CI_REGISTRY"],
 		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
@@ -33,7 +33,7 @@ func (g gitlabEnv) EnvRead(e Env) {
 	})
 }
 
-func (g gitlabEnv) Domain(e Env) string {
+func (g gitlabEnv) Domain(e Environment) string {
 	s := e["CI_ENVIRONMENT_URL"]
 	u, err := url.Parse(s)
 	if err != nil {

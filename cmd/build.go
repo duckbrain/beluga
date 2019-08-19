@@ -12,7 +12,7 @@ var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Builds a docker image and pushes it to the registry",
 	Run: func(cmd *cobra.Command, args []string) {
-		e := lib.Environment
+		e := lib.Env()
 		builtImage := ""
 		images := strings.Fields(e.Image())
 		for _, image := range images {
