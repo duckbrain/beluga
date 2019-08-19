@@ -1,31 +1,42 @@
 package docker
 
-import "os/exec"
+import (
+	"os"
+	"os/exec"
+)
+
+func run(s string, args ...string) error {
+	c := exec.Command(s, args...)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
+}
 
 func Build(context, dockerfile, tag string) error {
-	return exec.Command(
+	return run(
 		"docker", "build",
 		context,
 		"-f", dockerfile,
 		"-t", tag,
-	).Run()
+	)
 }
 
 func Tag(src, dst string) error {
-	return exec.Command("docker", "tag", src, dst).Run()
+	return run("docker", "tag", src, dst)
 }
 
 func Push(tag ...string) error {
 	args := []string{"push"}
 	args = append(args, tag...)
-	return exec.Command("docker", args...).Run()
+	return run("docker", args...)
 }
 
 func Login(hostname, username, password string) error {
-	return exec.Command(
+	return run(
 		"docker", "login",
 		hostname,
 		"-u", username,
 		"-p", password,
-	).Run()
+	)
 }
