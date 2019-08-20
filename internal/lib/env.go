@@ -22,17 +22,21 @@ var defaultEnv = Environment{
 	varGitDefaultBranch: "master",
 }
 
+var envs = []func(Environment){}
+
 func Env() Environment {
 	// Start with the defaults
 	e := defaultEnv.clone()
-	// BELUGA_ prefix vars
-	belugaEnv{}.EnvRead(e)
-	// Environment specific overrides
-	belugaEnvironmentEnv{}.EnvRead(e)
+
+	// Load all environment variables
+	envy.Load()
+	e.Merge(Environment(envy.Map()))
+
+	envReadEnvOverrides(e)
 
 	// CI environments
-	for _, r := range envs {
-		r.EnvRead(e)
+	for _, read := range envs {
+		read(e)
 	}
 
 	// Compute Dockerfile if not yet set
@@ -41,10 +45,6 @@ func Env() Environment {
 	}
 
 	return e
-}
-
-type EnvReader interface {
-	EnvRead(Environment)
 }
 
 type Environment map[string]string
@@ -103,18 +103,9 @@ func (e Environment) clone() Environment {
 	return n
 }
 
-var envs = []EnvReader{}
-
-type belugaEnv struct{}
-
-func (belugaEnv) EnvRead(e Environment) {
-	envy.Load()
-	e.Merge(Environment(envy.Map()))
-}
-
-type belugaEnvironmentEnv struct{}
-
-func (belugaEnvironmentEnv) EnvRead(e Environment) {
+// envReadEnvOverrides overrides values for a specific environment by reading
+// the value of the BELUGA_* variable as an env file.
+func envReadEnvOverrides(e Environment) {
 	v := e["BELUGA_"+strings.ToUpper(e.Environment())]
 	s, err := godotenv.Unmarshal(v)
 	if err != nil {

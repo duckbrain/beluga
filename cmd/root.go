@@ -7,6 +7,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func handlePanic() {
+	msg := recover()
+	if err, ok := msg.(error); ok {
+		fmt.Printf("beluga: %v\n", err)
+		os.Exit(1)
+	} else {
+		fmt.Printf("beluga: unknown error: %v\n", msg)
+		os.Exit(2)
+	}
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "beluga",
