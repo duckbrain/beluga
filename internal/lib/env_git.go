@@ -10,7 +10,7 @@ func cmdString(cmd string, args ...string) string {
 	if err != nil {
 		return ""
 	}
-	return string(output)
+	return strings.TrimSpace(string(output))
 }
 
 func gitEnvRead(e Environment) {
