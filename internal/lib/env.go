@@ -2,6 +2,7 @@ package lib
 
 import (
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -45,6 +46,22 @@ func Env() Environment {
 	// Compute Dockerfile if not yet set
 	if e[varDockerfile] == "" {
 		e[varDockerfile] = filepath.Join(e.DockerContext(), "Dockerfile")
+	}
+
+	// Compute docker-compose.yaml|yml
+	if e[varDockerComposeFile] == "" {
+		chkFile := func(f string) bool {
+			if _, err := os.Stat(f); err == nil {
+				e[varDockerComposeFile] = f
+				return true
+			}
+			return false
+		}
+		switch {
+		case chkFile("docker-compose.beluga.yaml"):
+		case chkFile("docker-compose.yaml"):
+		case chkFile("docker-compose.yml"):
+		}
 	}
 
 	return e

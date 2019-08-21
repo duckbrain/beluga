@@ -3,22 +3,24 @@
 package lib
 
 const (
-	varApplication      = "BELUGA_APPLICATION"
-	varDockerContext    = "BELUGA_DOCKER_CONTEXT"
-	varDockerfile       = "BELUGA_DOCKERFILE"
-	varDomain           = "BELUGA_DOMAIN"
-	varEnvironment      = "BELUGA_ENVIRONMENT"
-	varGitDefaultBranch = "BELUGA_GIT_DEFAULT_BRANCH"
-	varImage            = "BELUGA_IMAGE"
-	varRegistry         = "BELUGA_REGISTRY"
-	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
-	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
-	varVariant          = "BELUGA_VARIANT"
-	varVersion          = "BELUGA_VERSION"
+	varApplication       = "BELUGA_APPLICATION"
+	varDockerComposeFile = "BELUGA_DOCKER_COMPOSE_FILE"
+	varDockerContext     = "BELUGA_DOCKER_CONTEXT"
+	varDockerfile        = "BELUGA_DOCKERFILE"
+	varDomain            = "BELUGA_DOMAIN"
+	varEnvironment       = "BELUGA_ENVIRONMENT"
+	varGitDefaultBranch  = "BELUGA_GIT_DEFAULT_BRANCH"
+	varImage             = "BELUGA_IMAGE"
+	varRegistry          = "BELUGA_REGISTRY"
+	varRegistryPassword  = "BELUGA_REGISTRY_PASSWORD"
+	varRegistryUsername  = "BELUGA_REGISTRY_USERNAME"
+	varVariant           = "BELUGA_VARIANT"
+	varVersion           = "BELUGA_VERSION"
 )
 
 var knownVarNames = []string{
 	varApplication,
+	varDockerComposeFile,
 	varDockerContext,
 	varDockerfile,
 	varDomain,
@@ -34,6 +36,10 @@ var knownVarNames = []string{
 
 func (e Environment) Application() string {
 	return e[varApplication]
+}
+
+func (e Environment) DockerComposeFile() string {
+	return e[varDockerComposeFile]
 }
 
 func (e Environment) DockerContext() string {

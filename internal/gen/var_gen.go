@@ -15,12 +15,13 @@ import (
 
 var names = sort.StringSlice{
 	"Application",
-	"Domain",
-	"Environment",
-	"Image",
+	"DockerComposeFile",
 	"DockerContext",
 	"Dockerfile",
+	"Domain",
+	"Environment",
 	"GitDefaultBranch",
+	"Image",
 	"Registry",
 	"RegistryPassword",
 	"RegistryUsername",
