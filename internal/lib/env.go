@@ -39,6 +39,9 @@ func Env() Environment {
 		read(e)
 	}
 
+	// Try to fill in blanks with git
+	gitEnvRead(e)
+
 	// Compute Dockerfile if not yet set
 	if e[varDockerfile] == "" {
 		e[varDockerfile] = filepath.Join(e.DockerContext(), "Dockerfile")
