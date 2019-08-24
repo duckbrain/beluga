@@ -18,7 +18,7 @@ func handlePanic() {
 	if err, ok := msg.(error); ok {
 		fmt.Printf("beluga: %v\n", err)
 		os.Exit(1)
-	} else {
+	} else if msg != nil {
 		fmt.Printf("beluga: unknown error: %v\n", msg)
 		os.Exit(2)
 	}

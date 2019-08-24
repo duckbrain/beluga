@@ -6,17 +6,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deployCmd = &cobra.Command{
-	Use:     "deploy",
+var teardownCmd = &cobra.Command{
+	Use:     "teardown",
 	Aliases: []string{"beach"},
-	Short:   "Deploy an application to a docker daemon",
+	Short:   "Teardown an application from a docker daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
 		compose := docker.Compose(lib.Env())
-		must(compose.Deploy())
+		must(compose.Teardown())
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(deployCmd)
+	rootCmd.AddCommand(teardownCmd)
 }

@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"net/url"
 )
 
@@ -18,6 +19,11 @@ func gitlabEnvRead(e Environment) {
 	} else if e["CI_COMMIT_REF_NAME"] == e.GitDefaultBranch() {
 		env = envStaging
 	}
+	domain := gitlabDomain(e)
+	dockerHost := ""
+	if domain != "" {
+		dockerHost = fmt.Sprintf("tcp://%v", domain)
+	}
 
 	e.MergeMissing(Environment{
 		varEnvironment:      env,
@@ -26,7 +32,8 @@ func gitlabEnvRead(e Environment) {
 		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
 		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
 		varImage:            e["CI_REGISTRY_IMAGE"],
-		varDomain:           gitlabDomain(e),
+		varDomain:           domain,
+		varDeployDockerHost: dockerHost,
 	})
 }
 

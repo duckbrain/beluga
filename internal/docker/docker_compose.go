@@ -1,24 +1,32 @@
 package docker
 
+import (
+	"github.com/duckbrain/beluga/internal/lib"
+)
+
 type Deployer interface {
 	Deploy(composeFile string) error
 	Teardown(composeFile string) error
 }
-type compose struct{}
+type Compose lib.Environment
 
-var Compose Deployer = compose{}
-
-func (compose) Deploy(composeFile string) error {
-	return run(
-		"docker-compose", "up", "-d",
-		"--no-build",
-		"-f", composeFile,
-	)
+func (c Compose) run(args ...string) error {
+	e := lib.Environment(c)
+	a := []string{}
+	if v := e.DockerComposeFile(); v != "" {
+		a = append(a, "--file", v)
+	}
+	if v := e.DeployDockerHost(); v != "" {
+		a = append(a, "--host", v)
+	}
+	a = append(a, args...)
+	return run("docker-compose", a...)
 }
 
-func (compose) Teardown(composeFile string) error {
-	return run(
-		"docker-compose", "down",
-		"-f", composeFile,
-	)
+func (c Compose) Deploy() error {
+	return c.run("up", "--detach", "--no-build")
+}
+
+func (c Compose) Teardown() error {
+	return c.run("down")
 }

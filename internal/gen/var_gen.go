@@ -15,6 +15,7 @@ import (
 
 var names = sort.StringSlice{
 	"Application",
+	"DeployDockerHost",
 	"DockerComposeFile",
 	"DockerContext",
 	"Dockerfile",

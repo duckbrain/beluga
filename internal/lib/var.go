@@ -4,6 +4,7 @@ package lib
 
 const (
 	varApplication       = "BELUGA_APPLICATION"
+	varDeployDockerHost  = "BELUGA_DEPLOY_DOCKER_HOST"
 	varDockerComposeFile = "BELUGA_DOCKER_COMPOSE_FILE"
 	varDockerContext     = "BELUGA_DOCKER_CONTEXT"
 	varDockerfile        = "BELUGA_DOCKERFILE"
@@ -20,6 +21,7 @@ const (
 
 var knownVarNames = []string{
 	varApplication,
+	varDeployDockerHost,
 	varDockerComposeFile,
 	varDockerContext,
 	varDockerfile,
@@ -36,6 +38,10 @@ var knownVarNames = []string{
 
 func (e Environment) Application() string {
 	return e[varApplication]
+}
+
+func (e Environment) DeployDockerHost() string {
+	return e[varDeployDockerHost]
 }
 
 func (e Environment) DockerComposeFile() string {
