@@ -1,0 +1,11 @@
+stages:
+- build
+- deploy
+
+beluga_build:
+  image: duckbrain/beluga
+  command: beluga build
+
+beluga_deploy:
+  image: duckbrain/beluga
+  command: beluga deploy
