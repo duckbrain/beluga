@@ -13,21 +13,28 @@ import (
 	"github.com/gobuffalo/flect"
 )
 
-var names = sort.StringSlice{
-	"Application",
-	"DeployDockerHost",
-	"DockerComposeFile",
-	"DockerContext",
-	"Dockerfile",
-	"Domain",
-	"Environment",
-	"GitDefaultBranch",
-	"Image",
-	"Registry",
-	"RegistryPassword",
-	"RegistryUsername",
-	"Variant",
-	"Version",
+var vars = map[string]struct {
+	// IsCustom tells the generator not to generate an access func for the
+	// variable so a custom one can be written.
+	IsCustom bool
+
+	// Desc provides a description to annotate docs and generated access funcs
+	Desc string
+}{
+	"Application":       {},
+	"DeployDockerHost":  {},
+	"DockerComposeFile": {},
+	"DockerContext":     {},
+	"Dockerfile":        {},
+	"Domain":            {},
+	"Environment":       {},
+	"GitDefaultBranch":  {},
+	"Image":             {},
+	"Registry":          {},
+	"RegistryPassword":  {},
+	"RegistryUsername":  {},
+	"Variant":           {},
+	"Version":           {},
 }
 
 var t = template.Must(template.New("").Funcs(template.FuncMap{
