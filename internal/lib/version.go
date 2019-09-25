@@ -2,27 +2,23 @@ package lib
 
 import (
 	"regexp"
-
-	"github.com/blang/semver"
 )
 
-type Version struct {
-	Name       String
-	Flavor     string
-	Prerelease string
-}
+var versionRegexp = regexp.MustCompile(
+	`^((\w+)\/)?v?((\d+\.\d+\.\d+)(-(\w+)(\.[0-9])?)?)$`,
+)
 
-var versionRegexp = regexp.MustCompile("^(([a-z0-9])+/)?v?(([0-9]+\\.){2}[0-9]+.*)$")
-
-func parseVersion(s string) (version string, flavor string) {
-	v, err := semver.Parse(s)
-	if er != nil {
-		return "", ""
-	}
-	return
-	res := versionRegexp.FindSubmatch([]byte(s))
+func parseVersion(s string) Environment {
+	res := versionRegexp.FindStringSubmatch(s)
 	if res == nil {
-		return "", ""
+		return nil
 	}
-	return string(res[1]), ""
+	// Uncomment to debug the array that's output in tests
+	// x, _ := json.Marshal(res)
+	// fmt.Println(string(x))
+	return Environment{
+		varApplication: res[2],
+		varVersion:     res[3],
+		varEnvironment: res[6],
+	}
 }
