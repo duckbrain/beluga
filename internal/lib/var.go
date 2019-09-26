@@ -84,10 +84,13 @@ func (e Environment) RegistryUsername() string {
 	return e[varRegistryUsername]
 }
 
+// Variant build of the application. This is helpful for situations where one
+// application is deployed with different builds for different settings.
 func (e Environment) Variant() string {
 	return e[varVariant]
 }
 
+// Version of the application being built/deployed
 func (e Environment) Version() string {
 	return e[varVersion]
 }
