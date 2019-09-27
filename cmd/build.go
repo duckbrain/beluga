@@ -14,6 +14,11 @@ var buildCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
 		e := lib.Env()
+
+		if e.RegistryUsername() != "" {
+			must(docker.Login(e.Registry(), e.RegistryUsername(), e.RegistryPassword()))
+		}
+
 		builtImage := ""
 		images := strings.Fields(e.Image())
 		for _, image := range images {
