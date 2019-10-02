@@ -29,7 +29,9 @@ var buildCmd = &cobra.Command{
 				must(docker.Tag(builtImage, image))
 			}
 		}
-		must(docker.Push(images...))
+		for _, image := range images {
+			must(docker.Push(image))
+		}
 	},
 }
 

@@ -26,10 +26,8 @@ func Tag(src, dst string) error {
 	return run("docker", "tag", src, dst)
 }
 
-func Push(tag ...string) error {
-	args := []string{"push"}
-	args = append(args, tag...)
-	return run("docker", args...)
+func Push(tag string) error {
+	return run("docker", "push", tag)
 }
 
 func Login(hostname, username, password string) error {
