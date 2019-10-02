@@ -14,14 +14,14 @@ func cmdString(cmd string, args ...string) string {
 }
 
 func gitEnvRead(e Environment) {
-	version := parseVersion(cmdString("git", "describe", "--tags", "--match", "v*"))
+	versionTag := cmdString("git", "describe", "--tags", "--match", "v*", "--exclude \"v*-*\"")
 
 	branch := cmdString("git", "rev-parse", "--abbrev-ref", "HEAD")
 	environment := ""
 
 	// lists all tags that the current commit points to
 	for _, tag := range strings.Split(cmdString("git", "tag", "--points-at", "HEAD"), "\n") {
-		if tag == version {
+		if tag == versionTag {
 			environment = envProduction
 			break
 		}
@@ -34,8 +34,10 @@ func gitEnvRead(e Environment) {
 		}
 	}
 
-	e.MergeMissing(Environment{
-		varVersion:     version,
-		varEnvironment: environment,
-	})
+	env := parseVersion(versionTag)
+	if len(environment) > 0 && env != nil {
+		env[varEnvironment] = environment
+	}
+
+	e.MergeMissing(env)
 }
