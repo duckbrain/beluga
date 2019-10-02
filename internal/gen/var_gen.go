@@ -23,6 +23,7 @@ var names = sort.StringSlice{
 	"Environment",
 	"GitDefaultBranch",
 	"Image",
+	"ImageTag",
 	"Registry",
 	"RegistryPassword",
 	"RegistryUsername",

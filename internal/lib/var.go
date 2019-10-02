@@ -12,6 +12,7 @@ const (
 	varEnvironment       = "BELUGA_ENVIRONMENT"
 	varGitDefaultBranch  = "BELUGA_GIT_DEFAULT_BRANCH"
 	varImage             = "BELUGA_IMAGE"
+	varImageTag          = "BELUGA_IMAGE_TAG"
 	varRegistry          = "BELUGA_REGISTRY"
 	varRegistryPassword  = "BELUGA_REGISTRY_PASSWORD"
 	varRegistryUsername  = "BELUGA_REGISTRY_USERNAME"
@@ -29,6 +30,7 @@ var knownVarNames = []string{
 	varEnvironment,
 	varGitDefaultBranch,
 	varImage,
+	varImageTag,
 	varRegistry,
 	varRegistryPassword,
 	varRegistryUsername,
@@ -70,6 +72,10 @@ func (e Environment) GitDefaultBranch() string {
 
 func (e Environment) Image() string {
 	return e[varImage]
+}
+
+func (e Environment) ImageTag() string {
+	return e[varImageTag]
 }
 
 func (e Environment) Registry() string {
