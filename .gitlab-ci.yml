@@ -2,10 +2,12 @@ stages:
 - build
 - deploy
 
-beluga_build:
+beluga:build:
+  stage: build
   image: duckbrain/beluga
-  command: beluga build
+  script: beluga build
 
-beluga_deploy:
+beluga:deploy:
+  stage: deploy
   image: duckbrain/beluga
-  command: beluga deploy
+  script: beluga deploy

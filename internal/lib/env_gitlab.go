@@ -12,12 +12,12 @@ func gitlabEnvRead(e Environment) {
 		return
 	}
 
-	var env = envReview
-	version := parseVersion(e["CI_COMMIT_TAG"])
-	if version != "" {
-		env = envProduction
+	var environment = envReview
+	env := parseVersion(e["CI_COMMIT_TAG"])
+	if env.Environment() != "" {
+		environment = envProduction
 	} else if e["CI_COMMIT_REF_NAME"] == e.GitDefaultBranch() {
-		env = envStaging
+		environment = envStaging
 	}
 	domain := gitlabDomain(e)
 	dockerHost := ""
@@ -25,9 +25,8 @@ func gitlabEnvRead(e Environment) {
 		dockerHost = fmt.Sprintf("tcp://%v", domain)
 	}
 
-	e.MergeMissing(Environment{
-		varEnvironment:      env,
-		varVersion:          version,
+	env.MergeMissing(Environment{
+		varEnvironment:      environment,
 		varRegistry:         e["CI_REGISTRY"],
 		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
 		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
@@ -35,6 +34,8 @@ func gitlabEnvRead(e Environment) {
 		varDomain:           domain,
 		varDeployDockerHost: dockerHost,
 	})
+
+	e.MergeMissing(env)
 }
 
 func gitlabDomain(e Environment) string {
