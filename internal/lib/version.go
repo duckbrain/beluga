@@ -11,7 +11,7 @@ var versionRegexp = regexp.MustCompile(
 func parseVersion(s string) Environment {
 	res := versionRegexp.FindStringSubmatch(s)
 	if res == nil {
-		return nil
+		return Environment{}
 	}
 	// Uncomment to debug the array that's output in tests
 	// x, _ := json.Marshal(res)
