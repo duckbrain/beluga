@@ -5,7 +5,9 @@ stages:
 beluga:build:
   stage: build
   image: duckbrain/beluga
-  script: beluga build
+  script:
+  - beluga env
+  - beluga build
 
 beluga:deploy:
   stage: deploy

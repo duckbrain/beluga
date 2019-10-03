@@ -36,50 +36,66 @@ var knownVarNames = []string{
 	varVersion,
 }
 
+// If provided, name of the (sub)application to compile
 func (e Environment) Application() string {
 	return e[varApplication]
 }
 
+// DOCKER_HOST environment variable to use while deploying
 func (e Environment) DeployDockerHost() string {
 	return e[varDeployDockerHost]
 }
 
+// Path to a docker-compose.yaml file to deploy
 func (e Environment) DockerComposeFile() string {
 	return e[varDockerComposeFile]
 }
 
+// Context of the docker build, defaults to root of the project
 func (e Environment) DockerContext() string {
 	return e[varDockerContext]
 }
 
+// Dockerfile to use in docker build, defaults `Dockerfile` in the context
+// directory (like docker does)
 func (e Environment) Dockerfile() string {
 	return e[varDockerfile]
 }
 
+// Domain name to deploy the stack to. This will be passed to the environment
+// when doing the docker deploy, so the compose file can reference this
+// appropriately.
 func (e Environment) Domain() string {
 	return e[varDomain]
 }
 
+// Environment to deploy to. "review", "staging", "production" are defaults,
+// but any string may be used.
 func (e Environment) Environment() string {
 	return e[varEnvironment]
 }
 
+// Target branch for PRs/MRs. Defaults to master.
 func (e Environment) GitDefaultBranch() string {
 	return e[varGitDefaultBranch]
 }
 
+// Docker image path to push to after build
 func (e Environment) Image() string {
 	return e[varImage]
 }
 
+// Docker registry to log into before pushing
 func (e Environment) Registry() string {
 	return e[varRegistry]
 }
 
+// Password to use to log into Docker registry
 func (e Environment) RegistryPassword() string {
 	return e[varRegistryPassword]
 }
 
+// Username to use to log into Docker registry
 func (e Environment) RegistryUsername() string {
 	return e[varRegistryUsername]
 }
