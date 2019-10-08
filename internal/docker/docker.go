@@ -4,8 +4,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-
-	"github.com/duckbrain/beluga/internal/lib"
 )
 
 type Docker struct {
@@ -36,7 +34,7 @@ func New(host string) Docker {
 	}
 }
 
-type localRun struct{}
+type localRun struct{ }
 
 func (localRun) run(c *exec.Cmd) error {
 	c.Stdin = os.Stdin
@@ -71,6 +69,6 @@ func (d Docker) Login(hostname, username, password string) error {
 	))
 }
 
-func (d Docker) Compose(env lib.Environment) Compose {
-	return Compose{env: env, runner: d.runner}
+func (d Docker) Compose(composeFile string) Compose {
+	return Compose{ComposeFile: composeFile, runner: d.runner}
 }
