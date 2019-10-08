@@ -4,12 +4,21 @@ import (
 	"regexp"
 )
 
-var versionRegexp = regexp.MustCompile("^v?(([0-9]+\\.){2}[0-9]+.*)$")
+var versionRegexp = regexp.MustCompile(
+	`^((\w+)\/)?v?((\d+\.\d+\.\d+)(-(\w+)(\.[0-9])?)?)$`,
+)
 
-func parseVersion(s string) string {
-	res := versionRegexp.FindSubmatch([]byte(s))
+func parseVersion(s string) Environment {
+	res := versionRegexp.FindStringSubmatch(s)
 	if res == nil {
-		return ""
+		return Environment{}
 	}
-	return string(res[1])
+	// Uncomment to debug the array that's output in tests
+	// x, _ := json.Marshal(res)
+	// fmt.Println(string(x))
+	return Environment{
+		varApplication: res[2],
+		varVersion:     res[3],
+		varEnvironment: res[6],
+	}
 }

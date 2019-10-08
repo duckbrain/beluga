@@ -60,10 +60,8 @@ func (d Docker) Tag(src, dst string) error {
 	return d.cmd("docker", "tag", src, dst).Run()
 }
 
-func (d Docker) Push(tag ...string) error {
-	args := []string{"push"}
-	args = append(args, tag...)
-	return d.cmd("docker", args...).Run()
+func (d Docker) Push(tag string) error {
+	return d.cmd("docker", "push", tag).Run()
 }
 
 func (d Docker) Login(hostname, username, password string) error {

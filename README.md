@@ -27,7 +27,6 @@ Instructs belugad to teardown the stack deployed for a `beluga build` command.
 
 ## Environment Variables
 
-### `beluga` Client variables used in CI
 
 | Data point                 | GitLab                            | Default                 |
 |----------------------------|-----------------------------------|-------------------------|

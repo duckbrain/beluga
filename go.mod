@@ -3,6 +3,7 @@ module github.com/duckbrain/beluga
 go 1.12
 
 require (
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/caarlos0/env/v6 v6.0.0 // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/gobuffalo/envy v1.7.0

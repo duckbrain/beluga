@@ -14,9 +14,14 @@ var buildCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
 		e := lib.Env()
+		d := docker.New("") // TODO: Have a way to specify for build
+
+		if e.RegistryUsername() != "" {
+			must(d.Login(e.Registry(), e.RegistryUsername(), e.RegistryPassword()))
+		}
+
 		builtImage := ""
 		images := strings.Fields(e.Image())
-		d := docker.New("") // TODO: Have a way to specify for build
 
 		for _, image := range images {
 			if builtImage == "" {
@@ -26,7 +31,9 @@ var buildCmd = &cobra.Command{
 				must(d.Tag(builtImage, image))
 			}
 		}
-		must(d.Push(images...))
+		for _, image := range images {
+			must(d.Push(image))
+		}
 	},
 }
 
