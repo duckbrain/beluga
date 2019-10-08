@@ -16,15 +16,17 @@ var buildCmd = &cobra.Command{
 		e := lib.Env()
 		builtImage := ""
 		images := strings.Fields(e.Image())
+		d := docker.New("") // TODO: Have a way to specify for build
+
 		for _, image := range images {
 			if builtImage == "" {
-				must(docker.Build(e.DockerContext(), e.Dockerfile(), image))
+				must(d.Build(e.DockerContext(), e.Dockerfile(), image))
 				builtImage = image
 			} else {
-				must(docker.Tag(builtImage, image))
+				must(d.Tag(builtImage, image))
 			}
 		}
-		must(docker.Push(images...))
+		must(d.Push(images...))
 	},
 }
 

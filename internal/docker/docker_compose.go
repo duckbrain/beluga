@@ -5,13 +5,16 @@ import (
 )
 
 type Deployer interface {
-	Deploy(composeFile string) error
-	Teardown(composeFile string) error
+	Deploy() error
+	Teardown() error
 }
-type Compose lib.Environment
+type Compose struct {
+	env lib.Environment
+	commander
+}
 
 func (c Compose) run(args ...string) error {
-	e := lib.Environment(c)
+	e := c.env
 	a := []string{}
 	if v := e.DockerComposeFile(); v != "" {
 		a = append(a, "--file", v)
@@ -20,7 +23,7 @@ func (c Compose) run(args ...string) error {
 		a = append(a, "--host", v)
 	}
 	a = append(a, args...)
-	return run("docker-compose", a...)
+	return c.cmd("docker-compose", a...).Run()
 }
 
 func (c Compose) Deploy() error {
