@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"os/exec"
+
 	"github.com/duckbrain/beluga/internal/lib"
 )
 
@@ -10,7 +12,7 @@ type Deployer interface {
 }
 type Compose struct {
 	env lib.Environment
-	commander
+	runner
 }
 
 func (c Compose) run(args ...string) error {
@@ -23,7 +25,7 @@ func (c Compose) run(args ...string) error {
 		a = append(a, "--host", v)
 	}
 	a = append(a, args...)
-	return c.cmd("docker-compose", a...).Run()
+	return c.runner.run(exec.Command("docker-compose", a...))
 }
 
 func (c Compose) Deploy() error {

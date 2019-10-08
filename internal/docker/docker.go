@@ -9,14 +9,14 @@ import (
 )
 
 type Docker struct {
-	commander
+	runner
 }
 
-type commander interface {
-	cmd(s string, args ...string) *exec.Cmd
+type runner interface {
+	run(*exec.Cmd) error
 }
 
-var Local = Docker{commander: localCmd{}}
+var Local = Docker{runner: localRun{}}
 
 func New(host string) Docker {
 	if host == "" {
@@ -30,49 +30,47 @@ func New(host string) Docker {
 
 	switch u.Scheme {
 	case "portainer":
-		return Docker{commander: newPortainer(u)}
+		return Docker{runner: newPortainer(u)}
 	default:
 		return Local
 	}
 }
 
-type localCmd struct{}
+type localRun struct{}
 
-func (localCmd) cmd(s string, args ...string) *exec.Cmd {
-	c := exec.Command(s, args...)
+func (localRun) run(c *exec.Cmd) error {
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
-	return c
+	return c.Run()
 }
 
 func (d Docker) Build(context, dockerfile, tag string) error {
-	c := d.cmd(
+	return d.run(exec.Command(
 		"docker", "build",
 		context,
 		"-f", dockerfile,
 		"-t", tag,
-	)
-	return c.Run()
+	))
 }
 
 func (d Docker) Tag(src, dst string) error {
-	return d.cmd("docker", "tag", src, dst).Run()
+	return d.run(exec.Command("docker", "tag", src, dst))
 }
 
 func (d Docker) Push(tag string) error {
-	return d.cmd("docker", "push", tag).Run()
+	return d.run(exec.Command("docker", "push", tag))
 }
 
 func (d Docker) Login(hostname, username, password string) error {
-	return d.cmd(
+	return d.run(exec.Command(
 		"docker", "login",
 		hostname,
 		"-u", username,
 		"-p", password,
-	).Run()
+	))
 }
 
 func (d Docker) Compose(env lib.Environment) Compose {
-	return Compose{env: env, commander: d.commander}
+	return Compose{env: env, runner: d.runner}
 }

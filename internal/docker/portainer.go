@@ -1,27 +1,56 @@
 package docker
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"time"
 
 	"github.com/duckbrain/beluga/internal/portainer"
 )
 
-type portainerCmd struct{ client portainer.Client }
+type portainerRun struct {
+	port   int
+	client *portainer.Client
+}
 
-func newPortainer(u *url.URL) portainerCmd {
-	client := portainer.Client{
+func newPortainer(u *url.URL) *portainerRun {
+	client := &portainer.Client{
 		Client: http.Client{
 			Timeout: time.Minute,
 		},
 		DSN: u,
 	}
-	return portainerCmd{client: client}
+	return &portainerRun{client: client}
 }
 
-func (portainerCmd) cmd(s string, args ...string) *exec.Cmd {
-	c := localCmd{}.cmd(s, args...)
-	return c
+func (cmd *portainerRun) listen() error {
+	ln, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return err
+	}
+	cmd.port = ln.Addr().(*net.TCPAddr).Port
+	go http.Serve(ln, cmd.client)
+	return nil
+}
+
+func (cmd *portainerRun) run(c *exec.Cmd) error {
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if cmd.port == 0 {
+		err := cmd.client.Authenticate()
+		if err != nil {
+			return err
+		}
+		err = cmd.listen()
+		if err != nil {
+			return err
+		}
+	}
+	c.Env = []string{fmt.Sprintf("DOCKER_HOST=http://localhost:%v", cmd.port)}
+	return c.Run()
 }
