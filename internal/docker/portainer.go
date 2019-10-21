@@ -12,6 +12,9 @@ import (
 	"github.com/duckbrain/beluga/internal/portainer"
 )
 
+// TODO: Portainer has an API endpoint to deploy a stack without relaying the docker proxy.
+// https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
+// For this to be used, portainer.Client should implement the Deployer interface.
 type portainerRun struct {
 	port   int
 	client *portainer.Client
