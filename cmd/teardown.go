@@ -11,7 +11,8 @@ var teardownCmd = &cobra.Command{
 	Short:   "Teardown an application from a docker daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		must(lib.Env().Deployer().Teardown())
+		env := lib.Env()
+		must(env.Deployer().Teardown(env.DockerComposeFile()))
 	},
 }
 

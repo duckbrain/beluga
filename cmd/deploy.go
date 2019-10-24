@@ -11,7 +11,8 @@ var deployCmd = &cobra.Command{
 	Short:   "Deploy an application to a docker daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		must(lib.Env().Deployer().Deploy())
+		env := lib.Env()
+		must(env.Deployer().Deploy(env.DockerComposeFile(), map[string]string(env)))
 	},
 }
 

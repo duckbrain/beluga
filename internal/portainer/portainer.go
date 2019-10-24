@@ -11,6 +11,13 @@ import (
 	"path"
 )
 
+type StackDeploymentType int
+
+const (
+	SwarmStack   StackDeploymentType = 1
+	ComposeStack StackDeploymentType = 2
+)
+
 type Client struct {
 	// DSN is a parsed URL that represents the domain specific language for the
 	// connection. The Scheme must be "portainer", (this is changed to HTTPs)
@@ -31,8 +38,18 @@ func (c Client) path(s ...string) string {
 	u.User = nil
 	u.Fragment = ""
 	u.RawQuery = ""
-	u.Scheme = "https"
+	if c.flag("http") {
+		u.Scheme = "http"
+	} else {
+		u.Scheme = "https"
+	}
 	return u.String()
+}
+
+// flag returns true if flag s is present on the DSN
+func (c Client) flag(s string) bool {
+	_, ok := c.DSN.Query()[s]
+	return ok
 }
 
 // Authenticate logs in with the user credentials, and obtains a JWT to use for
@@ -67,7 +84,7 @@ func (c *Client) Authenticate() error {
 func (c *Client) serveHTTPError(err error, w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 	w.WriteHeader(503)
-	w.Write([]byte(fmt.Sprintf("HTTP proxy error: %v", err.Error())))
+	_, _ = w.Write([]byte(fmt.Sprintf("HTTP proxy error: %v", err.Error())))
 }
 
 // ServeHTTP implements the http.Handler interface to allow listening on and
@@ -101,11 +118,30 @@ func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
-func (c *Client) Deploy() error {
-	panic("not implemented")
+func (c *Client) Deploy(composeFile string, env map[string]string) error {
+	stackType := ComposeStack
+
+	queryParameters := url.Values{
+		"type":       {fmt.Sprint(stackType)},
+		"method":     {"string"},
+		"endpointID": {c.DSN.Path},
+	}
+	var requestBody struct {
+		Name             string
+		StackFileContent string
+	}
+	reqJSON, err := json.Marshal(&requestBody)
+	if err != nil {
+		return err
+	}
+	_, err = c.Client.Post(
+		c.path("/stacks")+"?"+queryParameters.Encode(),
+		"application/json",
+		bytes.NewReader(reqJSON))
+	return err
 }
 
 // TODO https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackDelete
-func (c *Client) Teardown() error {
+func (c *Client) Teardown(composeFile string) error {
 	panic("not implemented")
 }

@@ -34,7 +34,7 @@ func New(host string) Docker {
 	}
 }
 
-type localRun struct{ }
+type localRun struct{}
 
 func (localRun) run(c *exec.Cmd) error {
 	c.Stdin = os.Stdin
@@ -69,6 +69,6 @@ func (d Docker) Login(hostname, username, password string) error {
 	))
 }
 
-func (d Docker) Compose(composeFile string) Compose {
-	return Compose{ComposeFile: composeFile, runner: d.runner}
+func (d Docker) Compose() Compose {
+	return Compose{runner: d.runner}
 }
