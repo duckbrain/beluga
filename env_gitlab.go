@@ -1,4 +1,4 @@
-package lib
+package beluga
 
 import (
 	"fmt"
@@ -15,9 +15,9 @@ func gitlabEnvRead(e Environment) {
 	var environment = envReview
 	var image string
 	env := parseVersion(e["CI_COMMIT_TAG"])
-	if env.Environment() != "" {
+	if env[varEnvironment] != "" {
 		environment = envProduction
-	} else if e["CI_COMMIT_REF_NAME"] == e.GitDefaultBranch() {
+	} else if e["CI_COMMIT_REF_NAME"] == e[varGitDefaultBranch] {
 		environment = envStaging
 	}
 	domain := gitlabDomain(e)
@@ -30,7 +30,7 @@ func gitlabEnvRead(e Environment) {
 	if environment == envStaging {
 		image += " " + e["CI_REGISTRY_IMAGE"] + ":latest"
 	} else if environment == envProduction {
-		image = e["CI_REGISTRY_IMAGE"] + ":" + e.Version()
+		image = e["CI_REGISTRY_IMAGE"] + ":" + e[varVersion]
 	}
 
 	env.MergeMissing(Environment{

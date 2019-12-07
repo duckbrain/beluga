@@ -3,24 +3,29 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/duckbrain/beluga/internal/lib"
+	"github.com/duckbrain/beluga"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
+
+var logger = logrus.New()
 
 var envAllKeys bool
 var envCmd = &cobra.Command{
 	Use:   "env",
 	Short: "Print out the environment variables that beluga computes.",
 	Run: func(cmd *cobra.Command, args []string) {
-		e := lib.Env()
-		var keys []string
-		if envAllKeys {
-			keys = e.SortedKeys()
-		} else {
-			keys = e.KnownKeys()
+		values, err := beluga.Env().Format(beluga.BashFormat, envAllKeys)
+		if err != nil {
+			if values == nil {
+				logger.Error(err)
+				return
+			} else {
+				logger.Warn(err)
+			}
 		}
-		for _, key := range keys {
-			fmt.Printf("export %v='%v'\n", key, e[key])
+		for _, line := range values {
+			fmt.Println(line)
 		}
 	},
 }

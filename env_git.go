@@ -1,4 +1,4 @@
-package lib
+package beluga
 
 import (
 	"os/exec"
@@ -27,7 +27,7 @@ func gitEnvRead(e Environment) {
 		}
 	}
 	if environment == "" {
-		if branch == e.GitDefaultBranch() {
+		if branch == e[varGitDefaultBranch] {
 			environment = envStaging
 		} else {
 			environment = envReview

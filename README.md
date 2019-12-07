@@ -17,7 +17,7 @@ services: # TODO
 
 Pulls the latest build, then uses it as a cache, to build and push a docker image to a registry.
 
-### `beluga build [COMPOSE_FILE]`
+### `beluga deploy [COMPOSE_FILE]`
 
 Sends the `docker-compose.yaml` file to the belugad server, where it will be loaded.
 

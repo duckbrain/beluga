@@ -1,4 +1,4 @@
-package portainer
+package beluga
 
 import (
 	"bytes"
@@ -11,14 +11,7 @@ import (
 	"path"
 )
 
-type StackDeploymentType int
-
-const (
-	SwarmStack   StackDeploymentType = 1
-	ComposeStack StackDeploymentType = 2
-)
-
-type Client struct {
+type Portainer struct {
 	// DSN is a parsed URL that represents the domain specific language for the
 	// connection. The Scheme must be "portainer", (this is changed to HTTPs)
 	// for requests. The host and optional port are used literally, the username
@@ -32,7 +25,7 @@ type Client struct {
 	jwt string
 }
 
-func (c Client) path(s ...string) string {
+func (c Portainer) path(s ...string) string {
 	u := *c.DSN
 	u.Path = path.Join(s...)
 	u.User = nil
@@ -47,14 +40,14 @@ func (c Client) path(s ...string) string {
 }
 
 // flag returns true if flag s is present on the DSN
-func (c Client) flag(s string) bool {
+func (c Portainer) flag(s string) bool {
 	_, ok := c.DSN.Query()[s]
 	return ok
 }
 
 // Authenticate logs in with the user credentials, and obtains a JWT to use for
 // other calls. This must be called before any other calls.
-func (c *Client) Authenticate() error {
+func (c *Portainer) Authenticate() error {
 	if c.DSN.User == nil {
 		return errors.New("no user info in DNS")
 	}
@@ -81,7 +74,7 @@ func (c *Client) Authenticate() error {
 	return nil
 }
 
-func (c *Client) serveHTTPError(err error, w http.ResponseWriter, r *http.Request) {
+func (c *Portainer) serveHTTPError(err error, w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 	w.WriteHeader(503)
 	_, _ = w.Write([]byte(fmt.Sprintf("HTTP proxy error: %v", err.Error())))
@@ -90,7 +83,7 @@ func (c *Client) serveHTTPError(err error, w http.ResponseWriter, r *http.Reques
 // ServeHTTP implements the http.Handler interface to allow listening on and
 // proxying requests from a docker client to the deamon, authenticated through
 // the Portainer instance
-func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *Portainer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := c.path("/endpoints", c.DSN.Path, "docker", r.URL.Path)
 	req, err := http.NewRequest(r.Method, p, r.Body)
 	if err != nil {
@@ -118,11 +111,9 @@ func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
-func (c *Client) Deploy(composeFile string, env map[string]string) error {
-	stackType := ComposeStack
-
+func (c *Portainer) Deploy(opts DeployOpts) error {
 	queryParameters := url.Values{
-		"type":       {fmt.Sprint(stackType)},
+		"type":       {fmt.Sprint(opts.Mode)},
 		"method":     {"string"},
 		"endpointID": {c.DSN.Path},
 	}
@@ -130,6 +121,8 @@ func (c *Client) Deploy(composeFile string, env map[string]string) error {
 		Name             string
 		StackFileContent string
 	}
+	requestBody.Name = opts.StackName
+	requestBody.StackFileContent = opts.ComposeFile
 	reqJSON, err := json.Marshal(&requestBody)
 	if err != nil {
 		return err
@@ -142,6 +135,6 @@ func (c *Client) Deploy(composeFile string, env map[string]string) error {
 }
 
 // TODO https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackDelete
-func (c *Client) Teardown(composeFile string) error {
+func (c *Portainer) Teardown(opts DeployOpts) error {
 	panic("not implemented")
 }

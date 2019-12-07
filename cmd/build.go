@@ -3,8 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/duckbrain/beluga/internal/docker"
-	"github.com/duckbrain/beluga/internal/lib"
+	"github.com/duckbrain/beluga"
 	"github.com/spf13/cobra"
 )
 
@@ -13,8 +12,8 @@ var buildCmd = &cobra.Command{
 	Short: "Builds a docker image and pushes it to the registry",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		e := lib.Env()
-		d := docker.New("") // TODO: Have a way to specify for build
+		e := beluga.Env()
+		d := beluga.Docker("") // TODO: Have a way to specify for build
 
 		if e.RegistryUsername() != "" {
 			must(d.Login(e.Registry(), e.RegistryUsername(), e.RegistryPassword()))

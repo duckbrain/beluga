@@ -1,9 +1,8 @@
-package lib
+package beluga
 
 import (
 	"log"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -42,11 +41,6 @@ func Env() Environment {
 
 	// Try to fill in blanks with git
 	gitEnvRead(e)
-
-	// Compute Dockerfile if not yet set
-	if e[varDockerfile] == "" {
-		e[varDockerfile] = filepath.Join(e.DockerContext(), "Dockerfile")
-	}
 
 	// Compute docker-compose.yaml|yml
 	if e[varDockerComposeFile] == "" {
@@ -126,7 +120,7 @@ func (e Environment) clone() Environment {
 // envReadEnvOverrides overrides values for a specific environment by reading
 // the value of the BELUGA_* variable as an env file.
 func envReadEnvOverrides(e Environment) {
-	v := e["BELUGA_"+strings.ToUpper(e.Environment())]
+	v := e["BELUGA_"+strings.ToUpper(e[varEnvironment])]
 	s, err := godotenv.Unmarshal(v)
 	if err != nil {
 		log.Println("beluga: env parse: ", err)

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/duckbrain/beluga/internal/lib"
+	"github.com/duckbrain/beluga"
 	"github.com/spf13/cobra"
 )
 
@@ -11,8 +11,8 @@ var teardownCmd = &cobra.Command{
 	Short:   "Teardown an application from a docker daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		env := lib.Env()
-		must(env.Deployer().Teardown(env.DockerComposeFile()))
+		env := beluga.Env()
+		must(env.Deployer().Teardown(env.DeployOpts()))
 	},
 }
 

@@ -1,4 +1,4 @@
-package docker
+package beluga
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/duckbrain/beluga/internal/portainer"
 )
 
 // TODO: Portainer has an API endpoint to deploy a stack without relaying the docker proxy.
