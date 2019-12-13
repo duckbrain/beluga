@@ -12,7 +12,7 @@ var deployCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
 		env := beluga.Env()
-		must(env.Deployer().Deploy(env.DeployOpts()))
+		must(env.Deployer().Deploy(env))
 	},
 }
 

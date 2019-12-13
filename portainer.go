@@ -113,16 +113,20 @@ func (c *Portainer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // TODO https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
 func (c *Portainer) Deploy(opts DeployOpts) error {
 	queryParameters := url.Values{
-		"type":       {fmt.Sprint(opts.Mode)},
+		"type":       {fmt.Sprint(opts.DeployMode())},
 		"method":     {"string"},
 		"endpointID": {c.DSN.Path},
+	}
+	composeFileContents, err := opts.ComposeFileContents()
+	if err != nil {
+		return err
 	}
 	var requestBody struct {
 		Name             string
 		StackFileContent string
 	}
-	requestBody.Name = opts.StackName
-	requestBody.StackFileContent = opts.ComposeFile
+	requestBody.Name = opts.StackName()
+	requestBody.StackFileContent = composeFileContents
 	reqJSON, err := json.Marshal(&requestBody)
 	if err != nil {
 		return err

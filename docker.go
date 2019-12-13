@@ -1,6 +1,7 @@
 package beluga
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -15,6 +16,12 @@ func (d Docker) run(c *exec.Cmd) error {
 	c.Stderr = os.Stderr
 	c.Env = []string{"DOCKER_HOST=" + string(d)}
 	return c.Run()
+}
+
+type BuildInfo interface {
+	BuildContext() string
+	Dockerfile() string
+	DockerImage() string
 }
 
 func (d Docker) Build(context, dockerfile, tag string) error {
@@ -43,19 +50,46 @@ func (d Docker) Login(hostname, username, password string) error {
 	))
 }
 
+type DeployOpts interface {
+	ComposeFileContents() (string, error)
+	StackName() string
+	DeployMode() DeployMode
+}
+
+func (env Environment) ComposeFileContents() (string, error) {
+	cmd := exec.Command("docker-compose", "config")
+	cmd.Env, _ = env.Format(GoEnvFormat, true)
+	out, err := cmd.Output()
+	return string(out), err
+}
+
+func writeComposeFile(opts DeployOpts) (filename string, err error) {
+	contents, err := opts.ComposeFileContents()
+	file, err := ioutil.TempFile("", "")
+	if err != nil {
+		return "", err
+	}
+	_, err = file.WriteString(contents)
+	if err != nil {
+		return "", err
+	}
+	return file.Name(), file.Close()
+}
+
 func (d Docker) Deploy(opts DeployOpts) error {
-	composeFile, err := opts.writeComposeFile()
+	stackName := opts.StackName()
+	composeFile, err := writeComposeFile(opts)
 	if err != nil {
 		return err
 	}
 	defer os.Remove(composeFile)
 
 	var cmd *exec.Cmd
-	switch opts.Mode {
+	switch opts.DeployMode() {
 	case ComposeMode:
 		cmd = exec.Command("docker-compose",
 			"--file", composeFile,
-			"--project-name", opts.StackName,
+			"--project-name", stackName,
 			"up",
 			"--detach", "--no-build")
 	case SwarmMode:
@@ -63,27 +97,28 @@ func (d Docker) Deploy(opts DeployOpts) error {
 			"--compose-file", composeFile,
 			"--prune",
 			"--with-registry-auth",
-			opts.StackName)
+			stackName)
 	}
 	return d.run(cmd)
 }
 
 func (d Docker) Teardown(opts DeployOpts) error {
+	stackName := opts.StackName()
 	var cmd *exec.Cmd
-	switch opts.Mode {
+	switch opts.DeployMode() {
 	case ComposeMode:
-		composeFile, err := opts.writeComposeFile()
+		composeFile, err := writeComposeFile(opts)
 		if err != nil {
 			return err
 		}
 		defer os.Remove(composeFile)
 		cmd = exec.Command("docker-compose",
 			"--file", composeFile,
-			"--project-name", opts.StackName,
+			"--project-name", stackName,
 			"down",
 			"--volumes", "--remove-orphans")
 	case SwarmMode:
-		cmd = exec.Command("docker", "stack", "rm", opts.StackName)
+		cmd = exec.Command("docker", "stack", "rm", stackName)
 	}
 	return d.run(cmd)
 }

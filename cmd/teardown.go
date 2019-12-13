@@ -12,7 +12,7 @@ var teardownCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
 		env := beluga.Env()
-		must(env.Deployer().Teardown(env.DeployOpts()))
+		must(env.Deployer().Teardown(env))
 	},
 }
 

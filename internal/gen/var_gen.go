@@ -49,7 +49,7 @@ var vars = Vars{
 	{Name: "Registry", Desc: "Docker registry to log into before pushing", GenerateAccessor: true},
 	{Name: "RegistryPassword", Desc: "Password to use to log into Docker registry", GenerateAccessor: true},
 	{Name: "RegistryUsername", Desc: "Username to use to log into Docker registry", GenerateAccessor: true},
-	{Name: "StackName", Desc: ""},
+	{Name: "StackName", Desc: "", GenerateAccessor: true},
 	{Name: "Variant", Desc: "Variant build of the application. This is helpful for situations where one application is deployed with different builds for different settings."},
 	{Name: "Version", Desc: "Version of the application being built/deployed"},
 }

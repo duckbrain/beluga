@@ -68,3 +68,7 @@ func (e Environment) RegistryPassword() string {
 func (e Environment) RegistryUsername() string {
 	return e[varRegistryUsername]
 }
+
+func (e Environment) StackName() string {
+	return e[varStackName]
+}
