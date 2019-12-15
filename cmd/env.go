@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/duckbrain/beluga"
@@ -10,16 +11,28 @@ import (
 
 var logger = logrus.New()
 
-var envAllKeys bool
+var envOpts struct {
+	All    bool
+	Format string
+}
 var envCmd = &cobra.Command{
 	Use:   "env",
 	Short: "Print out the environment variables that beluga computes.",
-	Run: func(cmd *cobra.Command, args []string) {
-		values, err := beluga.Env().Format(beluga.BashFormat, envAllKeys)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var format beluga.EnvFormat
+		switch envOpts.Format {
+		case "env":
+			format = beluga.EnvFileFormat
+		case "bash":
+			format = beluga.BashFormat
+		default:
+			return errors.New("unknown format")
+		}
+
+		values, err := beluga.Env().Format(format, envOpts.All)
 		if err != nil {
 			if values == nil {
-				logger.Error(err)
-				return
+				return err
 			} else {
 				logger.Warn(err)
 			}
@@ -27,10 +40,12 @@ var envCmd = &cobra.Command{
 		for _, line := range values {
 			fmt.Println(line)
 		}
+		return nil
 	},
 }
 
 func init() {
-	envCmd.Flags().BoolVarP(&envAllKeys, "all", "a", false, "Output all environment variables, instead of just those known to beluga.")
 	rootCmd.AddCommand(envCmd)
+	envCmd.Flags().BoolVarP(&envOpts.All, "all", "a", false, "Output all environment variables, instead of just those known to beluga.")
+	envCmd.Flags().StringVarP(&envOpts.Format, "format", "f", "bash", "Format to output environment values, bash|env")
 }

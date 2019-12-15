@@ -7,16 +7,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var buildOpts struct {
+	// Cache bool // TODO
+	Push bool
+}
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Builds a docker image and pushes it to the registry",
-	Run: func(cmd *cobra.Command, args []string) {
-		defer handlePanic()
+	RunE: func(cmd *cobra.Command, args []string) error {
 		e := beluga.Env()
 		d := beluga.Docker("") // TODO: Have a way to specify for build
 
 		if e.RegistryUsername() != "" {
-			must(d.Login(e.Registry(), e.RegistryUsername(), e.RegistryPassword()))
+			err := d.Login(e.Registry(), e.RegistryUsername(), e.RegistryPassword())
+			if err != nil {
+				return err
+			}
 		}
 
 		builtImage := ""
@@ -24,18 +30,33 @@ var buildCmd = &cobra.Command{
 
 		for _, image := range images {
 			if builtImage == "" {
-				must(d.Build(e.DockerContext(), e.Dockerfile(), image))
+				err := d.Build(e.DockerContext(), e.Dockerfile(), image)
+				if err != nil {
+					return err
+				}
 				builtImage = image
 			} else {
-				must(d.Tag(builtImage, image))
+				err := d.Tag(builtImage, image)
+				if err != nil {
+					return err
+				}
 			}
 		}
-		for _, image := range images {
-			must(d.Push(image))
+
+		if buildOpts.Push {
+			for _, image := range images {
+				err := d.Push(image)
+				if err != nil {
+					return err
+				}
+			}
 		}
+
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(buildCmd)
+	buildCmd.Flags().BoolVarP(&buildOpts.Push, "push", "p", true, "If true, push the resulting container to the registry.")
 }
