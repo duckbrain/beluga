@@ -32,12 +32,14 @@ func (env Environment) Deployer() Deployer {
 	switch host[:strings.Index(host, ":")] {
 	case "portainer", "portainer-insecure":
 		logger.Printf("Portainer url: %v", host)
-		client, err := portainer.New(host)
+		deployer := &PortainerDeploy{}
+		client, err := portainer.New(host, deployer)
 		if err != nil {
 			panic(err)
 		}
 		client.Logger = logger
-		return &PortainerDeploy{Client: client}
+		deployer.Client = client
+		return deployer
 	case "ssh":
 		panic("SSH not implemented")
 	default:

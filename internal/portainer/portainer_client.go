@@ -75,6 +75,13 @@ type Endpoint struct {
 
 type Endpoints []Endpoint
 
+func (e Endpoints) Len() int {
+	return len(e)
+}
+func (e Endpoints) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
+}
+
 type StackType int64
 
 const (

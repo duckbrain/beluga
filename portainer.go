@@ -5,7 +5,10 @@ import (
 )
 
 type PortainerDeploy struct {
-	Client *portainer.Client
+	Client     *portainer.Client
+	StackType  string
+	EndpointID int64
+	GroupID    int64
 }
 
 func (c *PortainerDeploy) Deploy(opts DeployOpts) error {

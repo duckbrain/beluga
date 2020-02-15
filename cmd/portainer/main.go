@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/duckbrain/beluga/portainer"
+	"github.com/duckbrain/beluga/internal/portainer"
 	"github.com/gobuffalo/envy"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -176,9 +176,11 @@ func must(err error) {
 func ComposeFileContents() (string, error) {
 	var data []byte
 	var err error
-	if composeFile == "" {
+	if composeFile == "-" {
+		client.Logger.Println("reading compose from stdin")
 		data, err = ioutil.ReadAll(os.Stdin)
 	} else {
+		client.Logger.Printf("reading compose file %v", composeFile)
 		data, err = ioutil.ReadFile(composeFile)
 	}
 	return string(data), err
@@ -197,6 +199,7 @@ func init() {
 	stackNewCmd.Flags().Int64VarP(&stack.EndpointID, "endpoint-id", "e", 0, "Endpoint ID to deploy the stack onto")
 	stackNewCmd.Flags().StringVarP(&stack.Name, "name", "n", "", "Name of the stack")
 	stackNewCmd.Flags().StringVarP(&typeName, "type", "t", "swarm", "Type of stack: swarm | compose")
+	stackNewCmd.Flags().StringVarP(&composeFile, "compose-file", "f", "docker-compose.yaml", `Filename for the compose file to deploy; if "-", will use stdin`)
 	must(stackNewCmd.MarkFlagRequired("name"))
 	must(stackNewCmd.MarkFlagRequired("endpoint-id"))
 	stacksCmd.AddCommand(stackNewCmd)
