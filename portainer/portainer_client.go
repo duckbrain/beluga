@@ -7,9 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 
-	"github.com/gobwas/glob"
 	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -56,8 +54,8 @@ type Client struct {
 	JWT         string
 	Logger      logrus.StdLogger
 	Filters     struct {
-		ID      *int64 `schema:"id"`
-		GroupID *int64 `schema:"groupId"`
+		EndpointID *int64 `schema:"endpointID"`
+		GroupID    *int64 `schema:"groupID"`
 	}
 }
 
@@ -67,34 +65,6 @@ type Endpoint struct {
 }
 
 type Endpoints []Endpoint
-
-func (list Endpoints) Filter(s string) Endpoints {
-	newList := Endpoints{}
-
-	if id, err := strconv.ParseInt(s, 10, 64); err == nil {
-		for _, endpoint := range list {
-			if endpoint.ID == int64(id) {
-				newList = append(newList, endpoint)
-			}
-		}
-
-	} else if g, err := glob.Compile(s); err == nil {
-		for _, endpoint := range list {
-			if g.Match(endpoint.Name) {
-				newList = append(newList, endpoint)
-			}
-		}
-	} else {
-		for _, endpoint := range list {
-			if endpoint.Name == s {
-				newList = append(newList, endpoint)
-				break
-			}
-		}
-	}
-
-	return newList
-}
 
 type StackType int64
 
@@ -204,7 +174,20 @@ func (c *Client) Authenticate(u *url.Userinfo) (string, error) {
 
 func (c *Client) ListEndpoints() (Endpoints, error) {
 	result := Endpoints{}
-	err := c.do("GET", "/api/endpoints", c.Filters, nil, &result)
+	var err error
+	if c.Filters.EndpointID != nil {
+		endpoint := Endpoint{}
+		err = c.do("GET", fmt.Sprintf("/api/endpoints/%v", *c.Filters.EndpointID), nil, nil, &endpoint)
+		result = Endpoints{endpoint}
+	} else {
+		var params interface{}
+		if c.Filters.GroupID != nil {
+			params = struct {
+				GroupID int64 `schema:"groupId"`
+			}{GroupID: *c.Filters.GroupID}
+		}
+		err = c.do("GET", "/api/endpoints", params, nil, &result)
+	}
 	return result, err
 }
 
