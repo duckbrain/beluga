@@ -3,7 +3,7 @@ package beluga
 import (
 	"strings"
 
-	"github.com/duckbrain/beluga/portainer"
+	"github.com/duckbrain/beluga/internal/portainer"
 	"github.com/sirupsen/logrus"
 )
 
