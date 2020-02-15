@@ -148,6 +148,9 @@ func (c *Client) do(method, path string, params, body, response interface{}) err
 	buffer := &bytes.Buffer{}
 	bodyDecoder := json.NewDecoder(io.TeeReader(resp.Body, buffer))
 	if resp.StatusCode == 200 {
+		if response == nil {
+			return nil
+		}
 		err = errors.Wrap(bodyDecoder.Decode(response), "parsing response")
 		c.Logger.Printf("response: %v", buffer.String())
 		return err
@@ -246,4 +249,34 @@ func (c *Client) NewStack(s Stack, composeFileContents string) (Stack, error) {
 	err := c.do("POST", "/api/stacks", params, body, &newStack)
 
 	return newStack, err
+}
+
+func (c *Client) UpdateStack(s Stack, composeFileContents string, prune bool) (Stack, error) {
+	var params interface{}
+	if s.EndpointID > 0 {
+		params = struct {
+			EndpointID int64 `schema:"endpointId"`
+		}{EndpointID: s.EndpointID}
+	}
+
+	body := struct {
+		StackFileContent string
+		Env              Env
+		Prune            bool
+	}{
+		StackFileContent: composeFileContents,
+		Env:              s.Env,
+		Prune:            prune,
+	}
+
+	updatedStack := Stack{}
+
+	err := c.do("PUT", fmt.Sprintf("/api/stacks/%v", s.ID), params, body, &updatedStack)
+
+	return updatedStack, err
+}
+
+func (c *Client) RemoveStack(id int64) error {
+	err := c.do("DELETE", fmt.Sprintf("/api/stacks/%v", s.ID), nil, nil, nil)
+	return updatedStack, err
 }
