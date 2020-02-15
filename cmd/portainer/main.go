@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strconv"
 
 	"github.com/duckbrain/beluga/portainer"
 	"github.com/gobuffalo/envy"
@@ -16,6 +18,11 @@ var dsn string
 var verbose bool
 var endpointsFilter portainer.EndpointsFilter
 var stacksFilter portainer.StacksFilter
+var stack portainer.Stack
+var composeFile string
+var prune bool
+var id int64
+var typeName string
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
@@ -45,6 +52,8 @@ var rootCmd = &cobra.Command{
 		}
 		client.JWT = jwt
 
+		stack.Env = portainer.Env(envy.Map())
+
 		return nil
 	},
 }
@@ -54,7 +63,23 @@ var endpointsCmd = &cobra.Command{
 	Aliases: []string{"endpoint", "e"},
 	Short:   "List/view endpoints",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		endpoints, err := client.Endpoints(endpointsFilter)
+		var endpoints portainer.Endpoints
+		var err error
+		if len(args) > 0 {
+			for i, arg := range args {
+				id, err := strconv.ParseInt(arg, 10, 64)
+				if err != nil {
+					return errors.Wrapf(err, "parse endpoint ID %v", i+1)
+				}
+				e, err := client.Endpoint(id)
+				if err != nil {
+					return err
+				}
+				endpoints = append(endpoints, e)
+			}
+		} else {
+			endpoints, err = client.Endpoints(endpointsFilter)
+		}
 		if err != nil {
 			return err
 		}
@@ -68,6 +93,10 @@ var stacksCmd = &cobra.Command{
 	Aliases: []string{"stack", "s"},
 	Short:   "List/view stacks",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) > 0 {
+			return errors.New("Lookup by ID not yet supported")
+		}
+
 		stacks, err := client.Stacks(stacksFilter)
 		if err != nil {
 			return err
@@ -75,6 +104,84 @@ var stacksCmd = &cobra.Command{
 		fmt.Println(stacks)
 		return nil
 	},
+}
+
+func preIDArg(cmd *cobra.Command, args []string) (err error) {
+	if len(args) == 0 {
+		return errors.New("must provide an ID")
+	}
+	if len(args) > 1 {
+		return errors.New("can only provide one ID")
+	}
+	id, err = strconv.ParseInt(args[0], 10, 64)
+	return
+}
+
+var stackNewCmd = &cobra.Command{
+	Use:     "new",
+	Aliases: []string{"create", "n", "c"},
+	Short:   "Create a new stack",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		composeFileContents, err := ComposeFileContents()
+		if err != nil {
+			return errors.Wrap(err, "read compose file")
+		}
+		stack.Type, err = portainer.ParseStackType(typeName)
+		if err != nil {
+			return err
+		}
+		s, err := client.NewStack(stack, composeFileContents)
+		if err != nil {
+			return err
+		}
+		fmt.Println(s)
+		return nil
+	},
+}
+var stackUpdateCmd = &cobra.Command{
+	Use:     "update",
+	Aliases: []string{"create", "n", "c"},
+	Short:   "Create a new stack",
+	PreRunE: preIDArg,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		stack.ID = id
+		composeFileContents, err := ComposeFileContents()
+		if err != nil {
+			return errors.Wrap(err, "read compose file")
+		}
+		s, err := client.UpdateStack(stack, composeFileContents, prune)
+		if err != nil {
+			return err
+		}
+		fmt.Println(s)
+		return nil
+	},
+}
+var stackRemoveCmd = &cobra.Command{
+	Use:     "remove",
+	Aliases: []string{"delete", "destroy", "drop", "r", "d"},
+	Short:   "Remove a new stack",
+	PreRunE: preIDArg,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return client.RemoveStack(id)
+	},
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func ComposeFileContents() (string, error) {
+	var data []byte
+	var err error
+	if composeFile == "" {
+		data, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		data, err = ioutil.ReadFile(composeFile)
+	}
+	return string(data), err
 }
 
 func init() {
@@ -86,4 +193,17 @@ func init() {
 
 	stacksCmd.Flags().Int64VarP(&stacksFilter.EndpointID, "endpoint-id", "e", 0, "Filter by endpoint ID")
 	rootCmd.AddCommand(stacksCmd)
+
+	stackNewCmd.Flags().Int64VarP(&stack.EndpointID, "endpoint-id", "e", 0, "Endpoint ID to deploy the stack onto")
+	stackNewCmd.Flags().StringVarP(&stack.Name, "name", "n", "", "Name of the stack")
+	stackNewCmd.Flags().StringVarP(&typeName, "type", "t", "swarm", "Type of stack: swarm | compose")
+	must(stackNewCmd.MarkFlagRequired("name"))
+	must(stackNewCmd.MarkFlagRequired("endpoint-id"))
+	stacksCmd.AddCommand(stackNewCmd)
+
+	stackUpdateCmd.Flags().Int64VarP(&stack.EndpointID, "endpoint-id", "e", 0, "Endpoint ID to deploy the stack onto")
+	stackUpdateCmd.Flags().BoolVarP(&prune, "prune", "p", true, "Prune the containers when updating the stack")
+	stacksCmd.AddCommand(stackUpdateCmd)
+
+	stacksCmd.AddCommand(stackRemoveCmd)
 }

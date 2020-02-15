@@ -20,6 +20,17 @@ var schemeMap = map[string]string{
 	"portainer":          "https",
 }
 
+var statusMap = map[StatusError]string{
+	403: "Unauthorized",
+	404: "Not found",
+}
+
+type StatusError int64
+
+func (e StatusError) Error() string {
+	return statusMap[e]
+}
+
 func New(dsn string, opts interface{}) (*Client, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {
@@ -70,6 +81,19 @@ const (
 	Swarm   StackType = 1
 	Compose StackType = 2
 )
+
+var stackTypeMap = map[string]StackType{
+	"swarm":   Swarm,
+	"compose": Compose,
+}
+
+func ParseStackType(s string) (StackType, error) {
+	t, ok := stackTypeMap[s]
+	if !ok {
+		return 0, errors.New("unknown stack type")
+	}
+	return t, nil
+}
 
 type Env map[string]string
 
@@ -154,6 +178,9 @@ func (c *Client) do(method, path string, params, body, response interface{}) err
 		err = errors.Wrap(bodyDecoder.Decode(response), "parsing response")
 		c.Logger.Printf("response: %v", buffer.String())
 		return err
+	}
+	if _, ok := statusMap[StatusError(resp.StatusCode)]; ok {
+		return StatusError(resp.StatusCode)
 	}
 	errorMessage := Error{}
 	err = bodyDecoder.Decode(&errorMessage)
@@ -277,6 +304,5 @@ func (c *Client) UpdateStack(s Stack, composeFileContents string, prune bool) (S
 }
 
 func (c *Client) RemoveStack(id int64) error {
-	err := c.do("DELETE", fmt.Sprintf("/api/stacks/%v", s.ID), nil, nil, nil)
-	return updatedStack, err
+	return c.do("DELETE", fmt.Sprintf("/api/stacks/%v", id), nil, nil, nil)
 }
