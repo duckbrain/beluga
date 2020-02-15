@@ -14,6 +14,8 @@ import (
 var client *portainer.Client
 var dsn string
 var verbose bool
+var endpointsFilter portainer.EndpointsFilter
+var stacksFilter portainer.StacksFilter
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
@@ -25,7 +27,7 @@ func main() {
 var rootCmd = &cobra.Command{
 	Use: "portainer",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		c, err := portainer.New(dsn)
+		c, err := portainer.New(dsn, nil)
 		if err != nil {
 			return errors.Wrap(err, "parse DSN")
 		}
@@ -52,7 +54,7 @@ var endpointsCmd = &cobra.Command{
 	Aliases: []string{"endpoint", "e"},
 	Short:   "List/view endpoints",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		endpoints, err := client.ListEndpoints()
+		endpoints, err := client.Endpoints(endpointsFilter)
 		if err != nil {
 			return err
 		}
@@ -61,8 +63,27 @@ var endpointsCmd = &cobra.Command{
 	},
 }
 
+var stacksCmd = &cobra.Command{
+	Use:     "stacks",
+	Aliases: []string{"stack", "s"},
+	Short:   "List/view stacks",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		stacks, err := client.Stacks(stacksFilter)
+		if err != nil {
+			return err
+		}
+		fmt.Println(stacks)
+		return nil
+	},
+}
+
 func init() {
-	rootCmd.AddCommand(endpointsCmd)
 	rootCmd.PersistentFlags().StringVarP(&dsn, "dsn", "d", envy.Get("PORTAINER_DSN", ""), "DNS to connect to portainer with")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Print out debugging logging")
+
+	endpointsCmd.Flags().Int64VarP(&endpointsFilter.GroupID, "group-id", "g", 0, "Filter by group ID")
+	rootCmd.AddCommand(endpointsCmd)
+
+	stacksCmd.Flags().Int64VarP(&stacksFilter.EndpointID, "endpoint-id", "e", 0, "Filter by endpoint ID")
+	rootCmd.AddCommand(stacksCmd)
 }

@@ -20,7 +20,7 @@ var schemeMap = map[string]string{
 	"portainer":          "https",
 }
 
-func New(dsn string) (*Client, error) {
+func New(dsn string, opts interface{}) (*Client, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {
 		return nil, err
@@ -39,9 +39,11 @@ func New(dsn string) (*Client, error) {
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
 
-	err = decoder.Decode(&client.Filters, map[string][]string(u.Query()))
-	if err != nil {
-		return nil, errors.Wrap(err, "decode filters")
+	if opts != nil {
+		err = decoder.Decode(opts, map[string][]string(u.Query()))
+		if err != nil {
+			return nil, errors.Wrap(err, "decode filters")
+		}
 	}
 
 	return client, nil
@@ -53,10 +55,6 @@ type Client struct {
 	Credentials *url.Userinfo
 	JWT         string
 	Logger      logrus.StdLogger
-	Filters     struct {
-		EndpointID *int64 `schema:"endpointID"`
-		GroupID    *int64 `schema:"groupID"`
-	}
 }
 
 type Endpoint struct {
@@ -87,15 +85,31 @@ func (env Env) MarshalJSON() ([]byte, error) {
 	return json.Marshal(values)
 }
 
-type Stack struct {
-	ID         string `json:"Id"`
-	Name       string `json:"Name"`
-	Type       StackType
-	EndpointID int64
-	Env        Env
+func (env Env) UnmarshalJSON(data []byte) error {
+	type entry struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+	var values []entry
+	err := json.Unmarshal(data, &values)
+	if err != nil {
+		return err
+	}
+	for _, entry := range values {
+		env[entry.Name] = entry.Value
+	}
+	return nil
 }
 
-type Stacks []Stacks
+type Stack struct {
+	ID         int64     `json:"Id"`
+	Name       string    `json:"Name"`
+	Type       StackType `json:"Type"`
+	EndpointID int64     `json:"EndpointId"`
+	Env        Env       `json:"Env"`
+}
+
+type Stacks []Stack
 
 type Error struct {
 	Message string `json:"err"`
@@ -172,64 +186,64 @@ func (c *Client) Authenticate(u *url.Userinfo) (string, error) {
 	return resBody.JWT, err
 }
 
-func (c *Client) ListEndpoints() (Endpoints, error) {
-	result := Endpoints{}
-	var err error
-	if c.Filters.EndpointID != nil {
-		endpoint := Endpoint{}
-		err = c.do("GET", fmt.Sprintf("/api/endpoints/%v", *c.Filters.EndpointID), nil, nil, &endpoint)
-		result = Endpoints{endpoint}
-	} else {
-		var params interface{}
-		if c.Filters.GroupID != nil {
-			params = struct {
-				GroupID int64 `schema:"groupId"`
-			}{GroupID: *c.Filters.GroupID}
-		}
-		err = c.do("GET", "/api/endpoints", params, nil, &result)
+func (c *Client) Endpoint(id int64) (e Endpoint, err error) {
+	err = c.do("GET", fmt.Sprintf("/api/endpoints/%v", id), nil, nil, &e)
+	return
+}
+
+type EndpointsFilter struct {
+	GroupID int64 `schema:"groupId"`
+}
+
+func (c *Client) Endpoints(filter EndpointsFilter) (e Endpoints, err error) {
+	err = c.do("GET", "/api/endpoints", filter, nil, &e)
+	return
+}
+
+type StacksFilter struct {
+	EndpointID int64  `json:"EndpointId,omitempty"`
+	SwarmID    string `json:"SwarmId,omitempty"`
+}
+
+func (c *Client) Stacks(filters StacksFilter) (stacks Stacks, err error) {
+	var params interface{}
+	data, err := json.Marshal(filters)
+	if err != nil {
+		return nil, errors.Wrap(err, "encode filters")
 	}
-	return result, err
+	if string(data) != "{}" {
+		params = struct{ Filters string }{Filters: string(data)}
+	}
+	err = c.do("GET", "/api/stacks", params, nil, &stacks)
+	return
 }
 
-func (c *Client) ListStacks() (Stacks, error) {
-	result := Stacks{}
-	err := c.do("GET", "/api/stacks", nil, nil, &result)
-	return result, err
-}
+// https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
+func (c *Client) NewStack(s Stack, composeFileContents string) (Stack, error) {
+	params := struct {
+		Type       int64  `schema:"type"`
+		Method     string `schema:"method"`
+		EndpointID int64  `schema:"endpointId"`
+	}{
+		Type:       int64(s.Type),
+		Method:     "string",
+		EndpointID: s.EndpointID,
+	}
 
-// TODO https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
-func (c *Client) CreateStack(s Stack) error {
-	panic("TODO")
-	// 	queryParameters := url.Values{
-	// 		"type":       {fmt.Sprint(opts.DeployMode())},
-	// 		"method":     {"string"},
-	// 		"endpointID": {strings.TrimPrefix(c.DSN.Path, "/")},
-	// 	}
-	// 	composeFileContents, err := opts.ComposeFileContents()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	var requestBody struct {
-	// 		Name             string
-	// 		StackFileContent string
-	// 	}
-	// 	requestBody.Name = opts.StackName()
-	// 	requestBody.StackFileContent = composeFileContents
-	// 	reqJSON, err := json.Marshal(&requestBody)
-	// 	if err != nil {
-	// 		return err
-	// 	}
+	body := struct {
+		Name             string
+		SwarmID          string
+		StackFileContent string
+		Env              Env
+	}{
+		Name:             s.Name,
+		StackFileContent: composeFileContents,
+		Env:              s.Env,
+	}
 
-	// 	u := c.path("/stacks") + "?" + queryParameters.Encode()
+	newStack := Stack{}
 
-	// 	c.Logger.Printf("POST %v %v", u, string(reqJSON))
-	// 	resp, err := c.Client.Post(u, "application/json", bytes.NewReader(reqJSON))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	defer resp.Body.Close()
-	// 	if resp.StatusCode == 200 {
-	// 		return nil
-	// 	}
-	// 	return nil
+	err := c.do("POST", "/api/stacks", params, body, &newStack)
+
+	return newStack, err
 }
