@@ -1,7 +1,7 @@
 package beluga
 
 import (
-	"net/url"
+	"strings"
 
 	"github.com/duckbrain/beluga/portainer"
 	"github.com/sirupsen/logrus"
@@ -28,11 +28,11 @@ func (env Environment) Logger() logrus.StdLogger {
 func (env Environment) Deployer() Deployer {
 	logger := env.Logger()
 	host := env[varDeployDockerHost]
-	u, _ := url.Parse(host)
-	switch u.Scheme {
+
+	switch host[:strings.Index(host, ":")] {
 	case "portainer", "portainer-insecure":
-		logger.Printf("Portainer url: %v", u)
-		client, err := portainer.New(u)
+		logger.Printf("Portainer url: %v", host)
+		client, err := portainer.New(host)
 		if err != nil {
 			panic(err)
 		}

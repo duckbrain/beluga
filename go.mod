@@ -8,6 +8,8 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/gobuffalo/envy v1.7.0
 	github.com/gobuffalo/flect v0.1.5
+	github.com/gobwas/glob v0.2.3
+	github.com/gorilla/schema v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/pkg/errors v0.9.1
