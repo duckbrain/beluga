@@ -118,7 +118,7 @@ func (e Environment) clone() Environment {
 }
 
 func (e Environment) DeployMode() DeployMode {
-	return ComposeMode
+	return SwarmMode
 }
 
 // envReadEnvOverrides overrides values for a specific environment by reading

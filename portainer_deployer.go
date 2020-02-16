@@ -28,8 +28,13 @@ func (e Errors) Error() string {
 }
 
 func (c *PortainerDeploy) tryEndpoints(action func(endpoint portainer.Endpoint) error) error {
+	jwt, err := c.Client.Authenticate(nil)
+	if err != nil {
+		errors.Wrap(err, "auth")
+	}
+	c.Client.JWT = jwt
+
 	var endpoints portainer.Endpoints
-	var err error
 	if c.EndpointID != 0 {
 		var endpoint portainer.Endpoint
 		endpoint, err = c.Client.Endpoint(c.EndpointID)
@@ -77,21 +82,25 @@ func (c *PortainerDeploy) Deploy(opts DeployOpts) error {
 		return errors.Wrap(err, "compose file contents")
 	}
 	stackType := portainer.StackType(opts.DeployMode())
+	name := opts.StackName()
+	c.Client.Logger.Printf("Deploying with portainer %v in %v\n%v", name, stackType, composeFileContents)
 
 	return c.tryEndpoints(func(endpoint portainer.Endpoint) error {
-		stack, err := c.findStack(endpoint.ID, opts.StackName())
+		stack, err := c.findStack(endpoint.ID, name)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "find stack")
 		}
 		if stack == nil {
 			s := portainer.Stack{
 				EndpointID: endpoint.ID,
-				Name:       opts.StackName(),
+				Name:       name,
 				Type:       stackType,
 			}
 			_, err = c.Client.NewStack(s, composeFileContents)
+			err = errors.Wrap(err, "create stack")
 		} else {
 			_, err = c.Client.UpdateStack(*stack, composeFileContents, true)
+			err = errors.Wrapf(err, "update stack %v", stack.ID)
 		}
 		return err
 	})

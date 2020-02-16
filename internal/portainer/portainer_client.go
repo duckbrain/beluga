@@ -28,7 +28,11 @@ var statusMap = map[StatusError]string{
 type StatusError int64
 
 func (e StatusError) Error() string {
-	return statusMap[e]
+	msg, ok := statusMap[e]
+	if ok {
+		return msg
+	}
+	return fmt.Sprintf("status code %v", int64(e))
 }
 
 func New(dsn string, opts interface{}) (*Client, error) {
@@ -75,9 +79,6 @@ type Endpoint struct {
 
 type Endpoints []Endpoint
 
-func (e Endpoints) Len() int {
-	return len(e)
-}
 func (e Endpoints) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
@@ -143,11 +144,12 @@ type Stack struct {
 type Stacks []Stack
 
 type Error struct {
-	Message string `json:"err"`
+	Message string `json:"message"`
+	Details string `json:"details"`
 }
 
 func (e Error) Error() string {
-	return e.Message
+	return fmt.Sprintf("server error: %v; %v", e.Message, e.Details)
 }
 
 func (c *Client) do(method, path string, params, body, response interface{}) error {
@@ -178,7 +180,7 @@ func (c *Client) do(method, path string, params, body, response interface{}) err
 	defer resp.Body.Close()
 	buffer := &bytes.Buffer{}
 	bodyDecoder := json.NewDecoder(io.TeeReader(resp.Body, buffer))
-	if resp.StatusCode == 200 {
+	if resp.StatusCode >= 200 && resp.StatusCode <= 400 {
 		if response == nil {
 			return nil
 		}
@@ -255,8 +257,16 @@ func (c *Client) Stacks(filters StacksFilter) (stacks Stacks, err error) {
 	return
 }
 
+func (c *Client) SwarmID(endpointID int64) (string, error) {
+	var response struct {
+		ID string
+	}
+	err := c.do("GET", fmt.Sprintf("/api/endpoints/%v/docker/swarm", endpointID), nil, nil, &response)
+	return response.ID, err
+}
+
 // https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
-func (c *Client) NewStack(s Stack, composeFileContents string) (Stack, error) {
+func (c *Client) NewStack(s Stack, composeFileContents string) (newStack Stack, err error) {
 	params := struct {
 		Type       int64  `schema:"type"`
 		Method     string `schema:"method"`
@@ -278,11 +288,19 @@ func (c *Client) NewStack(s Stack, composeFileContents string) (Stack, error) {
 		Env:              s.Env,
 	}
 
-	newStack := Stack{}
+	// When deploying in swarm mode, we must include the swarm ID of the
+	// entrypoint. We can get this by querying the docker socket.
+	// See: https://gist.github.com/deviantony/77026d402366b4b43fa5918d41bc42f8#manage-docker-stacks-in-a-swarm-environment
+	if s.Type == Swarm {
+		body.SwarmID, err = c.SwarmID(s.EndpointID)
+		if err != nil {
+			err = errors.Wrap(err, "fetch swarm ID")
+			return
+		}
+	}
 
-	err := c.do("POST", "/api/stacks", params, body, &newStack)
-
-	return newStack, err
+	err = c.do("POST", "/api/stacks", params, body, &newStack)
+	return
 }
 
 func (c *Client) UpdateStack(s Stack, composeFileContents string, prune bool) (Stack, error) {
