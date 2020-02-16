@@ -268,11 +268,11 @@ func (c *Client) SwarmID(endpointID int64) (string, error) {
 // https://app.swaggerhub.com/apis-docs/deviantony/Portainer/1.22.0#/stacks/StackCreate
 func (c *Client) NewStack(s Stack, composeFileContents string) (newStack Stack, err error) {
 	params := struct {
-		Type       int64  `schema:"type"`
-		Method     string `schema:"method"`
-		EndpointID int64  `schema:"endpointId"`
+		Type       StackType `schema:"type"`
+		Method     string    `schema:"method"`
+		EndpointID int64     `schema:"endpointId"`
 	}{
-		Type:       int64(s.Type),
+		Type:       s.Type,
 		Method:     "string",
 		EndpointID: s.EndpointID,
 	}
@@ -291,12 +291,13 @@ func (c *Client) NewStack(s Stack, composeFileContents string) (newStack Stack, 
 	// When deploying in swarm mode, we must include the swarm ID of the
 	// entrypoint. We can get this by querying the docker socket.
 	// See: https://gist.github.com/deviantony/77026d402366b4b43fa5918d41bc42f8#manage-docker-stacks-in-a-swarm-environment
-	if s.Type == Swarm {
-		body.SwarmID, err = c.SwarmID(s.EndpointID)
-		if err != nil {
-			err = errors.Wrap(err, "fetch swarm ID")
-			return
-		}
+	body.SwarmID, err = c.SwarmID(s.EndpointID)
+	if err != nil {
+		err = errors.Wrap(err, "fetch swarm ID")
+		return
+	}
+	if body.SwarmID == "" {
+		params.Type = Compose
 	}
 
 	err = c.do("POST", "/api/stacks", params, body, &newStack)
