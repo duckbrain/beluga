@@ -1,4 +1,4 @@
-package beluga
+package compose
 
 import "testing"
 
