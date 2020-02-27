@@ -1,5 +1,7 @@
 package compose
 
+import "strings"
+
 type File struct {
 	Filename string             `yaml:"-"`
 	Version  string             `yaml:"version"`
@@ -15,7 +17,9 @@ func (f *File) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Service struct {
-	Name string
+	Name   string
+	Deploy Deploy `yaml:"deploy"`
+	Labels Labels `yaml:"labels"`
 	extra
 }
 
@@ -27,7 +31,7 @@ func (s *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Deploy struct {
-	Name string
+	Labels Labels `yaml:"labels"`
 	extra
 }
 
@@ -40,4 +44,23 @@ func (s *Deploy) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type Labels map[string]string
 
-//TODO marshal and unmarshal for labels
+func (l Labels) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	labels := map[string]string(l)
+	if err := unmarshal(labels); err == nil {
+		return nil
+	}
+
+	var lines []string
+	if err := unmarshal(&lines); err != nil {
+		return err
+	}
+	for _, line := range lines {
+		i := strings.Index(line, "=")
+		if i == -1 {
+			labels[line] = ""
+			continue
+		}
+		labels[line[:i]] = line[i+1:]
+	}
+	return nil
+}
