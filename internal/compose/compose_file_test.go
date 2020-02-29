@@ -3,19 +3,34 @@ package compose
 import (
 	"testing"
 
+	"github.com/go-test/deep"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"gopkg.in/yaml.v2"
 )
 
-func compareLabels(t *testing.T, expected, received Labels) {
-	match := len(received) == len(expected)
-	for key, value := range received {
-		if expected[key] != value {
-			match = false
-			break
-		}
+func assertEqual(t *testing.T, expected, received interface{}) {
+	if diff := deep.Equal(expected, received); diff != nil {
+		t.Errorf(`Results do not match: %v`, diff)
 	}
-	if !match {
-		t.Errorf(`Results do not match; expected %v; received %v`, expected, received)
+}
+func assertYamlEqual(t *testing.T, expected, received interface{}) {
+	expectedYaml, err := yaml.Marshal(expected)
+	if err != nil {
+		t.Error("marshal expected failed", err)
+	}
+	receivedYaml, err := yaml.Marshal(received)
+	if err != nil {
+		t.Error("marshal expected failed", err)
+	}
+
+	if string(expectedYaml) == string(receivedYaml) {
+		return
+	}
+
+	dmp := diffmatchpatch.New()
+	diff := dmp.DiffMain(string(expectedYaml), string(receivedYaml), false)
+	if len(diff) > 0 {
+		t.Error("marshalled yaml doesn't match", dmp.DiffPrettyText(diff))
 	}
 }
 
@@ -29,23 +44,27 @@ func TestFilesUnmarshal(t *testing.T) {
 version: '3.0'
 x-extra: 12345
 services:
-	foo:
-		image: duckbrain/foo
-		labels:
-			- beluga-foo=hello-world
-		deploy:
-			labels:
-				beluga-bar: world-hello`,
+  foo:
+    image: duckbrain/foo
+    labels:
+    - beluga-foo=hello-world
+    deploy:
+      labels:
+        beluga-bar: world-hello`,
 			File{
-				Version: "3.0",
-				Services: map[string]Service{
-					"foo": Service{
-						Labels: Labels{
-							"beluga-foo": "hello-world",
-						},
-						extra: extra{
-							fields: map[string]interface{}{
-								"image": "hello-world",
+				FileFields: FileFields{
+					Version: "3.0",
+					Services: map[string]Service{
+						"foo": Service{
+							serviceFields: serviceFields{
+								Labels: Labels{
+									"beluga-foo": "hello-world",
+								},
+							},
+							extra: extra{
+								fields: map[string]interface{}{
+									"image": "hello-world",
+								},
 							},
 						},
 					},
@@ -59,7 +78,8 @@ services:
 				t.Error("parse failed", err)
 				return
 			}
-
+			assertEqual(t, set.File, file)
+			assertYamlEqual(t, set.File, file)
 		})
 	}
 }
@@ -73,13 +93,13 @@ func TestLabels(t *testing.T) {
 		{"- a\n- b=3\n- c", Labels{"a": "", "b": "3", "c": ""}},
 	} {
 		t.Run(set.Input, func(t *testing.T) {
-			labels := Labels{}
+			var labels = Labels{}
 			if err := yaml.Unmarshal([]byte(set.Input), &labels); err != nil {
 				t.Error("parse failed", err)
 				return
 			}
-
-			compareLabels(t, set.Labels, labels)
+			assertEqual(t, set.Labels, labels)
+			assertYamlEqual(t, set.Labels, labels)
 		})
 	}
 }
