@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func assertEqual(t *testing.T, expected, received interface{}) {
@@ -35,6 +35,9 @@ func assertYamlEqual(t *testing.T, expected, received interface{}) {
 	}
 }
 
+var helloWorld = "hello-world"
+var emptyString = ""
+
 func TestFilesUnmarshal(t *testing.T) {
 	for _, set := range []struct {
 		Name  string
@@ -47,12 +50,10 @@ func TestFilesUnmarshal(t *testing.T) {
 version: '3.0'
 x-extra: 12345`,
 			File: File{
-				FileFields: FileFields{
-					Version: "3.0",
-				},
-				Extra: Extra{fields: map[string]interface{}{
+				Version: "3.0",
+				Fields: map[string]interface{}{
 					"x-extra": 12345,
-				}},
+				},
 			},
 		},
 		{
@@ -61,36 +62,41 @@ x-extra: 12345`,
 version: '3.0'
 x-extra: 12345
 services:
-  foo:
-    image: duckbrain/foo
-    labels:
-    - beluga-foo=hello-world
-    deploy:
-      labels:
-        beluga-bar: world-hello`,
+	foo:
+		image: duckbrain/foo
+		labels:
+			- beluga-foo=hello-world
+		deploy:
+			labels:
+				beluga-bar: hello-world
+`,
 			File{
-				FileFields: FileFields{
-					Version: "3.0",
-					Services: map[string]Service{
-						"foo": Service{
-							ServiceFields: ServiceFields{
-								Labels: Labels{
-									"beluga-foo": "hello-world",
-								},
-							},
-							Extra: Extra{
-								fields: map[string]interface{}{
-									"image": "hello-world",
-								},
+				Version: "3.0",
+				Services: map[string]Service{
+					"foo": Service{
+						Labels: Labels{
+							"beluga-foo": &helloWorld,
+						},
+						Deploy: Deploy{
+							Labels: Labels{
+								"beluga-bar": &helloWorld,
 							},
 						},
+						Fields: map[string]interface{}{
+							"image": "duckbrain/foo",
+						},
 					},
+				},
+				Fields: map[string]interface{}{
+					"x-extra": 12345,
 				},
 			},
 		},
 	} {
 		t.Run(set.Name, func(t *testing.T) {
 			file := File{}
+			// yaml doesn't allow tabs. We'll replace them with spaces to avoid
+			// mixed indentation that may confuse editors.
 			y := strings.ReplaceAll(set.Input, "\t", "  ")
 			if err := yaml.Unmarshal([]byte(y), &file); err != nil {
 				t.Error("parse failed", err)
@@ -104,13 +110,14 @@ services:
 
 func TestLabels(t *testing.T) {
 	for _, set := range []struct {
+		Name   string
 		Input  string
 		Labels Labels
 	}{
-		{"a:\nb: 3\nc:", Labels{"a": "", "b": "3", "c": ""}},
-		{"- a\n- b=3\n- c", Labels{"a": "", "b": "3", "c": ""}},
+		{"dictionary format", "a:\nb: hello-world\nc: ''", Labels{"a": nil, "b": &helloWorld, "c": &emptyString}},
+		{"array format", "- a\n- b=hello-world\n- c=", Labels{"a": nil, "b": &helloWorld, "c": &emptyString}},
 	} {
-		t.Run(set.Input, func(t *testing.T) {
+		t.Run(set.Name, func(t *testing.T) {
 			var labels = Labels{}
 			if err := yaml.Unmarshal([]byte(set.Input), &labels); err != nil {
 				t.Error("parse failed", err)
