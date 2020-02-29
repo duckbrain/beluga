@@ -2,13 +2,14 @@ package compose
 
 import "gopkg.in/yaml.v2"
 
-type extra struct {
+// Extra is exported because of a dependency bug. https://github.com/go-yaml/yaml/issues/463 Do not depend on it.
+type Extra struct {
 	// additionally stores the fields in the yaml so when marshalling them back,
 	// they will be preserved
 	fields map[string]interface{} `yaml:"-"`
 }
 
-func (e *extra) marshalYAML(s interface{}) (interface{}, error) {
+func (e *Extra) marshalYAML(s interface{}) (interface{}, error) {
 	b, err := yaml.Marshal(s)
 	if err != nil {
 		return nil, err
@@ -28,7 +29,7 @@ func (e *extra) marshalYAML(s interface{}) (interface{}, error) {
 	return m, nil
 }
 
-func (e *extra) unmarshalYAML(s interface{}, unmarshal func(interface{}) error) error {
+func (e *Extra) unmarshalYAML(s interface{}, unmarshal func(interface{}) error) error {
 	err := unmarshal(s)
 	if err != nil {
 		return err

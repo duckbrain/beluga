@@ -2,6 +2,7 @@ package compose
 
 import "strings"
 
+// FileFields is exported because of a dependency bug. https://github.com/go-yaml/yaml/issues/463 Do not depend on it.
 type FileFields struct {
 	Version  string             `yaml:"version"`
 	Services map[string]Service `yaml:"services"`
@@ -10,7 +11,7 @@ type FileFields struct {
 type File struct {
 	Filename string
 	FileFields
-	extra
+	Extra
 }
 
 func (f *File) MarshalYAML() (interface{}, error) {
@@ -21,50 +22,38 @@ func (f *File) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return f.unmarshalYAML(&f.FileFields, unmarshal)
 }
 
-type serviceFields struct {
+// ServiceFields is exported because of a dependency bug. https://github.com/go-yaml/yaml/issues/463 Do not depend on it.
+type ServiceFields struct {
 	Deploy Deploy `yaml:"deploy"`
 	Labels Labels `yaml:"labels"`
 }
 type Service struct {
 	Name string
-	serviceFields
-	extra
+	ServiceFields
+	Extra
 }
 
 func (s *Service) MarshalYAML() (interface{}, error) {
-	return s.marshalYAML(&s.serviceFields)
+	return s.marshalYAML(&s.ServiceFields)
 }
 func (s *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	err := s.unmarshalYAML(&s.serviceFields, unmarshal)
-	if err != nil {
-		return err
-	}
-	if s.Labels == nil {
-		s.Labels = Labels{}
-	}
-	return nil
+	return s.unmarshalYAML(&s.ServiceFields, unmarshal)
 }
 
-type deployFields struct {
+// DeployFields is exported because of a dependency bug. https://github.com/go-yaml/yaml/issues/463 Do not depend on it.
+type DeployFields struct {
 	Labels Labels `yaml:"labels"`
 }
 type Deploy struct {
-	deployFields
-	extra
+	DeployFields
+	Extra
 }
 
 func (d *Deploy) MarshalYAML() (interface{}, error) {
-	return d.marshalYAML(&d.deployFields)
+	return d.marshalYAML(&d.DeployFields)
 }
 func (d *Deploy) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	err := d.unmarshalYAML(&d.deployFields, unmarshal)
-	if err != nil {
-		return err
-	}
-	if d.Labels == nil {
-		d.Labels = Labels{}
-	}
-	return nil
+	return d.unmarshalYAML(&d.DeployFields, unmarshal)
 }
 
 type Labels map[string]string

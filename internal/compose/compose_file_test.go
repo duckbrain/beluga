@@ -1,6 +1,7 @@
 package compose
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -36,10 +37,26 @@ func assertYamlEqual(t *testing.T, expected, received interface{}) {
 
 func TestFilesUnmarshal(t *testing.T) {
 	for _, set := range []struct {
+		Name  string
 		Input string
 		File  File
 	}{
 		{
+			Name: "Simple file with no services",
+			Input: `
+version: '3.0'
+x-extra: 12345`,
+			File: File{
+				FileFields: FileFields{
+					Version: "3.0",
+				},
+				Extra: Extra{fields: map[string]interface{}{
+					"x-extra": 12345,
+				}},
+			},
+		},
+		{
+			"Full example file",
 			`
 version: '3.0'
 x-extra: 12345
@@ -56,12 +73,12 @@ services:
 					Version: "3.0",
 					Services: map[string]Service{
 						"foo": Service{
-							serviceFields: serviceFields{
+							ServiceFields: ServiceFields{
 								Labels: Labels{
 									"beluga-foo": "hello-world",
 								},
 							},
-							extra: extra{
+							Extra: Extra{
 								fields: map[string]interface{}{
 									"image": "hello-world",
 								},
@@ -72,9 +89,10 @@ services:
 			},
 		},
 	} {
-		t.Run(set.Input, func(t *testing.T) {
+		t.Run(set.Name, func(t *testing.T) {
 			file := File{}
-			if err := yaml.Unmarshal([]byte(set.Input), &file); err != nil {
+			y := strings.ReplaceAll(set.Input, "\t", "  ")
+			if err := yaml.Unmarshal([]byte(y), &file); err != nil {
 				t.Error("parse failed", err)
 				return
 			}
