@@ -14,24 +14,46 @@ type File struct {
 }
 
 type Service struct {
-	Deploy Deploy                 `yaml:"deploy"`
-	Labels Labels                 `yaml:"labels"`
-	Fields map[string]interface{} `yaml:"-,inline"`
+	Deploy      Deploy                 `yaml:"deploy"`
+	Labels      StringMap              `yaml:"labels"`
+	Environment StringMap              `yaml:"environment"`
+	Fields      map[string]interface{} `yaml:"-,inline"`
 }
 type Deploy struct {
-	Labels Labels                 `yaml:"labels"`
+	Labels StringMap              `yaml:"labels"`
 	Fields map[string]interface{} `yaml:"-,inline"`
 }
 
-type Labels map[string]*string
+// StringMap represents a map of string to string or array of key/values
+// seperated by "=". Values can be left clear represented by nil.
+//
+// label and environment fields in the service definitions use this type.
+type StringMap map[string]*string
 
-func (l *Labels) UnmarshalYAML(value *yaml.Node) error {
-	labels := map[string]*string(*l)
-	if labels == nil {
-		labels = make(map[string]*string)
+func (l StringMap) Get(key string) (value string, found bool, set bool) {
+	s, ok := l[key]
+	if s == nil {
+		return "", ok, false
 	}
-	if err := value.Decode(labels); err == nil {
-		*l = Labels(labels)
+	return *s, ok, true
+}
+func (l StringMap) Unset(key string) {
+	delete(l, key)
+}
+func (l StringMap) Clear(key string) {
+	l[key] = nil
+}
+func (l StringMap) Set(key, value string) {
+	l[key] = &value
+}
+
+func (l *StringMap) UnmarshalYAML(value *yaml.Node) error {
+	values := map[string]*string(*l)
+	if values == nil {
+		values = make(map[string]*string)
+	}
+	if err := value.Decode(values); err == nil {
+		*l = StringMap(values)
 		return nil
 	}
 
@@ -42,12 +64,12 @@ func (l *Labels) UnmarshalYAML(value *yaml.Node) error {
 	for _, line := range lines {
 		i := strings.Index(line, "=")
 		if i == -1 {
-			labels[line] = nil
+			values[line] = nil
 			continue
 		}
 		s := line[i+1:]
-		labels[line[:i]] = &s
+		values[line[:i]] = &s
 	}
-	*l = Labels(labels)
+	*l = StringMap(values)
 	return nil
 }

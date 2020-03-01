@@ -74,11 +74,11 @@ services:
 				Version: "3.0",
 				Services: map[string]Service{
 					"foo": Service{
-						Labels: Labels{
+						Labels: StringMap{
 							"beluga-foo": &helloWorld,
 						},
 						Deploy: Deploy{
-							Labels: Labels{
+							Labels: StringMap{
 								"beluga-bar": &helloWorld,
 							},
 						},
@@ -112,13 +112,13 @@ func TestLabels(t *testing.T) {
 	for _, set := range []struct {
 		Name   string
 		Input  string
-		Labels Labels
+		Labels StringMap
 	}{
-		{"dictionary format", "a:\nb: hello-world\nc: ''", Labels{"a": nil, "b": &helloWorld, "c": &emptyString}},
-		{"array format", "- a\n- b=hello-world\n- c=", Labels{"a": nil, "b": &helloWorld, "c": &emptyString}},
+		{"dictionary format", "a:\nb: hello-world\nc: ''", StringMap{"a": nil, "b": &helloWorld, "c": &emptyString}},
+		{"array format", "- a\n- b=hello-world\n- c=", StringMap{"a": nil, "b": &helloWorld, "c": &emptyString}},
 	} {
 		t.Run(set.Name, func(t *testing.T) {
-			var labels = Labels{}
+			var labels = StringMap{}
 			if err := yaml.Unmarshal([]byte(set.Input), &labels); err != nil {
 				t.Error("parse failed", err)
 				return
