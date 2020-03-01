@@ -30,12 +30,12 @@ type Deploy struct {
 // label and environment fields in the service definitions use this type.
 type StringMap map[string]*string
 
-func (l StringMap) Get(key string) (value string, found bool, set bool) {
-	s, ok := l[key]
+func (l StringMap) Get(key string) string {
+	s := l[key]
 	if s == nil {
-		return "", ok, false
+		return ""
 	}
-	return *s, ok, true
+	return *s
 }
 func (l StringMap) Unset(key string) {
 	delete(l, key)

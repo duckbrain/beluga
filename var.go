@@ -3,27 +3,23 @@
 package beluga
 
 const (
-	varApplication       = "BELUGA_APPLICATION"
-	varDeployDockerHost  = "BELUGA_DEPLOY_DOCKER_HOST"
-	varDockerComposeFile = "BELUGA_DOCKER_COMPOSE_FILE"
-	varDockerContext     = "BELUGA_DOCKER_CONTEXT"
-	varDockerfile        = "BELUGA_DOCKERFILE"
-	varDomain            = "BELUGA_DOMAIN"
-	varEnvironment       = "BELUGA_ENVIRONMENT"
-	varGitDefaultBranch  = "BELUGA_GIT_DEFAULT_BRANCH"
-	varImage             = "BELUGA_IMAGE"
-	varRegistry          = "BELUGA_REGISTRY"
-	varRegistryPassword  = "BELUGA_REGISTRY_PASSWORD"
-	varRegistryUsername  = "BELUGA_REGISTRY_USERNAME"
-	varStackName         = "BELUGA_STACK_NAME"
-	varVariant           = "BELUGA_VARIANT"
-	varVersion           = "BELUGA_VERSION"
+	varApplication      = "BELUGA_APPLICATION"
+	varDockerContext    = "BELUGA_DOCKER_CONTEXT"
+	varDockerfile       = "BELUGA_DOCKERFILE"
+	varDomain           = "BELUGA_DOMAIN"
+	varEnvironment      = "BELUGA_ENVIRONMENT"
+	varGitDefaultBranch = "BELUGA_GIT_DEFAULT_BRANCH"
+	varImage            = "BELUGA_IMAGE"
+	varRegistry         = "BELUGA_REGISTRY"
+	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
+	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
+	varStackName        = "BELUGA_STACK_NAME"
+	varVariant          = "BELUGA_VARIANT"
+	varVersion          = "BELUGA_VERSION"
 )
 
 var knownVarNames = []string{
 	varApplication,
-	varDeployDockerHost,
-	varDockerComposeFile,
 	varDockerContext,
 	varDockerfile,
 	varDomain,
@@ -47,6 +43,13 @@ func (e Environment) DockerContext() string {
 // directory (like docker does)
 func (e Environment) Dockerfile() string {
 	return e[varDockerfile]
+}
+
+// Domain name to deploy the stack to. This will be passed to the environment
+// when doing the docker deploy, so the compose file can reference this
+// appropriately.
+func (e Environment) Domain() string {
+	return e[varDomain]
 }
 
 // Docker image path to push to after build

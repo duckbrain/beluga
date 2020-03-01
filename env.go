@@ -117,10 +117,6 @@ func (e Environment) clone() Environment {
 	return n
 }
 
-func (e Environment) DeployMode() DeployMode {
-	return SwarmMode
-}
-
 // envReadEnvOverrides overrides values for a specific environment by reading
 // the value of the BELUGA_* variable as an env file.
 func envReadEnvOverrides(e Environment) {

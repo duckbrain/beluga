@@ -38,11 +38,9 @@ func (v Vars) Swap(i, j int) {
 
 var vars = Vars{
 	{Name: "Application", Desc: "If provided, name of the (sub)application to compile"},
-	{Name: "DeployDockerHost", Desc: "DOCKER_HOST environment variable to use while deploying"},
-	{Name: "DockerComposeFile", Desc: "Path to a docker-compose.yaml file to deploy"},
 	{Name: "DockerContext", Desc: "Context of the docker build, defaults to root of the project", GenerateAccessor: true},
 	{Name: "Dockerfile", Desc: "Dockerfile to use in docker build, defaults `Dockerfile` in the context directory (like docker does)", GenerateAccessor: true},
-	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately."},
+	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately.", GenerateAccessor: true},
 	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used."},
 	{Name: "GitDefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master."},
 	{Name: "Image", Desc: "Docker image path to push to after build", GenerateAccessor: true},
