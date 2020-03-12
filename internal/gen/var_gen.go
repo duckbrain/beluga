@@ -5,6 +5,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"path"
 	"sort"
 	"strings"
 	"text/template"
@@ -40,6 +41,7 @@ var vars = Vars{
 	{Name: "Application", Desc: "If provided, name of the (sub)application to compile"},
 	{Name: "DockerContext", Desc: "Context of the docker build, defaults to root of the project", GenerateAccessor: true},
 	{Name: "Dockerfile", Desc: "Dockerfile to use in docker build, defaults `Dockerfile` in the context directory (like docker does)", GenerateAccessor: true},
+	{Name: "DockerComposeTemplate", Desc: "A template docker-compose file that may contain modifies the compose file to work in different contexts", GenerateAccessor: true},
 	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately.", GenerateAccessor: true},
 	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used."},
 	{Name: "GitDefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master."},
@@ -108,6 +110,8 @@ func templateToFile(t *template.Template, filename string) error {
 	return nil
 }
 
+const docsDir = "../../docs"
+
 func main() {
 	sort.Sort(vars)
 	const filename = "../../var.go"
@@ -116,7 +120,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = templateToFile(mt, "../../docs/variables.md")
+	err = os.MkdirAll(docsDir, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	err = templateToFile(mt, path.Join(docsDir, "variables.md"))
 	if err != nil {
 		panic(err)
 	}

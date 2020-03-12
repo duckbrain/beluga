@@ -3,25 +3,40 @@ package compose
 import (
 	"strings"
 
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
 type File struct {
-	Filename string                 `yaml:"-"`
-	Version  string                 `yaml:"version"`
-	Services map[string]Service     `yaml:"services"`
-	Fields   map[string]interface{} `yaml:"-,inline"`
+	Services map[string]Service `yaml:"services"`
+	Fields   Fields             `yaml:"-,inline"`
 }
 
 type Service struct {
-	Deploy      Deploy                 `yaml:"deploy"`
-	Labels      StringMap              `yaml:"labels"`
-	Environment StringMap              `yaml:"environment"`
-	Fields      map[string]interface{} `yaml:"-,inline"`
+	Deploy      Deploy    `yaml:"deploy"`
+	Labels      StringMap `yaml:"labels"`
+	Environment StringMap `yaml:"environment"`
+	Fields      Fields    `yaml:"-,inline"`
 }
+
+func (s *Service) Merge(b Service) {
+	s.Deploy.Labels.Merge(b.Deploy.Labels)
+	s.Environment.Merge(b.Environment)
+	s.Fields.Merge(b.Fields)
+	s.Labels.Merge(b.Labels)
+}
+
 type Deploy struct {
-	Labels StringMap              `yaml:"labels"`
-	Fields map[string]interface{} `yaml:"-,inline"`
+	Labels StringMap `yaml:"labels"`
+	Fields Fields    `yaml:"-,inline"`
+}
+
+type Fields map[string]interface{}
+
+func (l Fields) Merge(b Fields) {
+	for k, v := range b {
+		merge(&l[k], v)
+	}
 }
 
 // StringMap represents a map of string to string or array of key/values
@@ -29,6 +44,30 @@ type Deploy struct {
 //
 // label and environment fields in the service definitions use this type.
 type StringMap map[string]*string
+
+func (l StringMap) Merge(b StringMap) {
+	for k, v := range b {
+		l[k] = v
+	}
+}
+
+func merge(a *interface{}, b interface{}) error {
+	switch x := b.(type) {
+	case string, int64, float64:
+		*a = x
+	case map[interface{}]interface{}:
+		y, ok := a.(map[interface{}]interface{})
+		if !ok {
+			return errors.New("incompatible types")
+		}
+		for k, v := range x {
+			y[k] = v
+		}
+	default:
+		return errors.Errorf("unknown type %T", x)
+	}
+	return nil
+}
 
 func (l StringMap) Get(key string) string {
 	s := l[key]

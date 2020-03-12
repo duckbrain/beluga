@@ -56,14 +56,6 @@ type DeployOpts interface {
 	DeployMode() DeployMode
 }
 
-func (env Environment) ComposeFileContents() (string, error) {
-	cmd := exec.Command("docker-compose", "config")
-	env["COMPOSE_FILE"] = env[varDockerComposeFile]
-	cmd.Env, _ = env.Format(GoEnvFormat, true)
-	out, err := cmd.Output()
-	return string(out), err
-}
-
 func writeComposeFile(opts DeployOpts) (filename string, err error) {
 	contents, err := opts.ComposeFileContents()
 	file, err := ioutil.TempFile("", "")
