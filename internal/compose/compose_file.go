@@ -7,21 +7,46 @@ import (
 )
 
 type File struct {
-	Filename string                 `yaml:"-"`
-	Version  string                 `yaml:"version"`
-	Services map[string]Service     `yaml:"services"`
-	Fields   map[string]interface{} `yaml:"-,inline"`
+	Services map[string]Service `yaml:"services"`
+	Fields   Fields             `yaml:"-,inline"`
 }
 
 type Service struct {
-	Deploy      Deploy                 `yaml:"deploy"`
-	Labels      StringMap              `yaml:"labels"`
-	Environment StringMap              `yaml:"environment"`
-	Fields      map[string]interface{} `yaml:"-,inline"`
+	Deploy      Deploy    `yaml:"deploy"`
+	Labels      StringMap `yaml:"labels"`
+	Environment StringMap `yaml:"environment"`
+	Fields      Fields    `yaml:"-,inline"`
 }
+
+func (s Service) Merge(b Service) Service {
+	r := Service{}
+	r.Deploy.Fields = s.Deploy.Fields.Merge(b.Deploy.Fields)
+	r.Deploy.Labels = s.Deploy.Labels.Merge(b.Deploy.Labels)
+	r.Fields = s.Fields.Merge(b.Fields)
+	r.Environment = s.Environment.Merge(b.Environment)
+	r.Labels = s.Labels.Merge(b.Labels)
+	return r
+}
+
 type Deploy struct {
-	Labels StringMap              `yaml:"labels"`
-	Fields map[string]interface{} `yaml:"-,inline"`
+	Labels StringMap `yaml:"labels"`
+	Fields Fields    `yaml:"-,inline"`
+}
+
+type Fields map[string]interface{}
+
+func (f Fields) Merge(b Fields) Fields {
+	if f == nil && b == nil {
+		return nil
+	}
+	r := make(map[string]interface{})
+	for key, value := range f {
+		r[key] = value
+	}
+	for key, value := range b {
+		r[key] = value
+	}
+	return r
 }
 
 // StringMap represents a map of string to string or array of key/values
@@ -29,6 +54,20 @@ type Deploy struct {
 //
 // label and environment fields in the service definitions use this type.
 type StringMap map[string]*string
+
+func (m StringMap) Merge(b StringMap) StringMap {
+	if m == nil && b == nil {
+		return nil
+	}
+	r := make(map[string]*string)
+	for key, value := range m {
+		r[key] = value
+	}
+	for key, value := range b {
+		r[key] = value
+	}
+	return r
+}
 
 func (l StringMap) Get(key string) string {
 	s := l[key]

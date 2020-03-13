@@ -50,8 +50,8 @@ func TestFilesUnmarshal(t *testing.T) {
 version: '3.0'
 x-extra: 12345`,
 			File: File{
-				Version: "3.0",
 				Fields: map[string]interface{}{
+					"version": "3.0",
 					"x-extra": 12345,
 				},
 			},
@@ -71,7 +71,6 @@ services:
 				beluga-bar: hello-world
 `,
 			File{
-				Version: "3.0",
 				Services: map[string]Service{
 					"foo": Service{
 						Labels: StringMap{
@@ -88,6 +87,7 @@ services:
 					},
 				},
 				Fields: map[string]interface{}{
+					"version": "3.0",
 					"x-extra": 12345,
 				},
 			},
@@ -125,6 +125,43 @@ func TestLabels(t *testing.T) {
 			}
 			assertEqual(t, set.Labels, labels)
 			assertYamlEqual(t, set.Labels, labels)
+		})
+	}
+}
+
+func exampleService() Service {
+	return Service{
+		Environment: StringMap{
+			"HELLO": &helloWorld,
+		},
+	}
+}
+
+func TestMergeService(t *testing.T) {
+
+	testCases := []struct {
+		desc   string
+		a      Service
+		b      Service
+		result Service
+	}{
+		{
+			desc:   "empty a",
+			a:      Service{},
+			b:      exampleService(),
+			result: exampleService(),
+		},
+		{
+			desc:   "empty b",
+			a:      exampleService(),
+			b:      Service{},
+			result: exampleService(),
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			r := tC.a.Merge(tC.b)
+			assertEqual(t, tC.result, r)
 		})
 	}
 }
