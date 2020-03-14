@@ -6,9 +6,32 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func Parse(s string) (File, error) {
+	f := File{}
+	return f, yaml.Unmarshal([]byte(s), &f)
+}
+
+func MustParse(s string) File {
+	f, err := Parse(s)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
 type File struct {
 	Services map[string]Service `yaml:"services"`
 	Fields   Fields             `yaml:"-,inline"`
+}
+
+func (f File) TryString() (string, error) {
+	b, err := yaml.Marshal(f)
+	return string(b), err
+}
+
+func (f File) String() string {
+	b, _ := yaml.Marshal(f)
+	return string(b)
 }
 
 type Service struct {

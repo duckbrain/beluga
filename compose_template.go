@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"bytes"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 	"github.com/duckbrain/beluga/internal/compose"
 	 "github.com/imdario/mergo"
 )
@@ -21,8 +20,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 	if len(tmp) == 0 {
 		return og, nil
 	}
-	templateBase := compose.File{}
-	err := yaml.Unmarshal([]byte(tmp), &templateBase)
+	tFile, err := compose.Parse(tmp)
 	if err != nil {
 		return "", errors.Wrap(err, "parse template yaml")
 	}
@@ -32,19 +30,18 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		return "", errors.Wrap(err, "parse template")
 	}
 
-	file := compose.File{}
-	err = yaml.Unmarshal([]byte(og), &file)
+	file, err := compose.Parse(og)
 	if err != nil {
-		return "", errors.Wrap(err, "unmarshal original")
+		return "", errors.Wrap(err, "parse source")
 	}
 
-	err = mergo.MergeWithOverwrite(&file.Fields, templateBase.Fields)
+	err = mergo.MergeWithOverwrite(&file.Fields, tFile.Fields)
 	if err != nil {
 		return "", errors.Wrap(err, "merging file base")
 	}
 
 	for name, service := range file.Services {
-		info := composeTemplateData{}
+		info := composeTemplateData{Env: env}
 		port, _ := strconv.ParseUint(service.Labels.Get("us.duckfam.beluga.port"), 10, 16)
 		info.Service.Port = uint16(port)
 
@@ -57,8 +54,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "execute template")
 		}
-		tFile := compose.File{}
-		err = yaml.Unmarshal(s.Bytes(), &tFile)
+		tFile, err := compose.Parse(s.String())
 		if err != nil {
 			return "", errors.Wrap(err, "parse templated yaml")
 		}
@@ -73,7 +69,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		file.Services[name] = service
 	}
 
-	for name, tService := range templateBase.Services {
+	for name, tService := range tFile.Services {
 		if name == "BELUGA" {
 			continue
 		}
@@ -89,6 +85,5 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		}
 	}
 
-	data, err := yaml.Marshal(file)
-	return string(data), errors.Wrap(err, "marshal yaml")
+	return file.TryString()
 }

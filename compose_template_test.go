@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/duckbrain/beluga/internal/compose"
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
@@ -76,10 +77,17 @@ version: "3.0"
 				t.Fatal(err)
 			}
 
+			expect := compose.MustParse(t2s(tC.output)).String()
+
+			if res == expect {
+				return
+			}
+
 			dmp := diffmatchpatch.New()
-			diff := dmp.DiffMain(t2s(tC.output), res, false)
+			diff := dmp.DiffMain(expect, res, false)
 			if len(diff) > 0 {
-				t.Error("yaml doesn't match", dmp.DiffPrettyText(diff))
+				t.Log(diff)
+				t.Error("yaml doesn't match\n", dmp.DiffPrettyText(diff))
 			}
 		})
 	}
