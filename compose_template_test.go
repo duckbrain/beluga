@@ -29,7 +29,7 @@ services:
 		image: hello-world
 		labels:
 		- us.duckfam.beluga.port=8080
-network:
+networks:
 	default:
 version: "3.0"
 `,
@@ -49,20 +49,20 @@ networks:
 			env: Environment{varStackName: "foobar"},
 			output: `
 services:
+	backup:
+		image: example/backups
 	hello:
+		deploy:
+			labels:
+				traefik.enable: "true"
+				traefik.http.services.foobar.loadbalancer.server.port: "8080"
+		labels:
+			us.duckfam.beluga.port: "8080"
 		environment:
 			VERSION: "2"
 		image: hello-world
-		deploy:
-			labels:
-			traefik.enable: "true"
-			traefik.http.services.foobar.loadbalancer.server.port: "8080"
-		labels:
-		- us.duckfam.beluga.port=8080
-	backup:
-		image: example/backups
-network:
-	default:
+networks:
+	default: null
 	traefik:
 		external: true
 version: "3.0"
