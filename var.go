@@ -3,23 +3,25 @@
 package beluga
 
 const (
-	varApplication      = "BELUGA_APPLICATION"
-	varDockerContext    = "BELUGA_DOCKER_CONTEXT"
-	varDockerfile       = "BELUGA_DOCKERFILE"
-	varDomain           = "BELUGA_DOMAIN"
-	varEnvironment      = "BELUGA_ENVIRONMENT"
-	varGitDefaultBranch = "BELUGA_GIT_DEFAULT_BRANCH"
-	varImage            = "BELUGA_IMAGE"
-	varRegistry         = "BELUGA_REGISTRY"
-	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
-	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
-	varStackName        = "BELUGA_STACK_NAME"
-	varVariant          = "BELUGA_VARIANT"
-	varVersion          = "BELUGA_VERSION"
+	varApplication           = "BELUGA_APPLICATION"
+	varDockerComposeTemplate = "BELUGA_DOCKER_COMPOSE_TEMPLATE"
+	varDockerContext         = "BELUGA_DOCKER_CONTEXT"
+	varDockerfile            = "BELUGA_DOCKERFILE"
+	varDomain                = "BELUGA_DOMAIN"
+	varEnvironment           = "BELUGA_ENVIRONMENT"
+	varGitDefaultBranch      = "BELUGA_GIT_DEFAULT_BRANCH"
+	varImage                 = "BELUGA_IMAGE"
+	varRegistry              = "BELUGA_REGISTRY"
+	varRegistryPassword      = "BELUGA_REGISTRY_PASSWORD"
+	varRegistryUsername      = "BELUGA_REGISTRY_USERNAME"
+	varStackName             = "BELUGA_STACK_NAME"
+	varVariant               = "BELUGA_VARIANT"
+	varVersion               = "BELUGA_VERSION"
 )
 
 var knownVarNames = []string{
 	varApplication,
+	varDockerComposeTemplate,
 	varDockerContext,
 	varDockerfile,
 	varDomain,
@@ -32,6 +34,12 @@ var knownVarNames = []string{
 	varStackName,
 	varVariant,
 	varVersion,
+}
+
+// A template docker-compose file that may contain modifies the compose file
+// to work in different contexts
+func (e Environment) DockerComposeTemplate() string {
+	return e[varDockerComposeTemplate]
 }
 
 // Context of the docker build, defaults to root of the project

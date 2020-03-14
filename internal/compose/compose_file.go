@@ -3,6 +3,7 @@ package compose
 import (
 	"strings"
 
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,14 +19,12 @@ type Service struct {
 	Fields      Fields    `yaml:"-,inline"`
 }
 
-func (s Service) Merge(b Service) Service {
-	r := Service{}
-	r.Deploy.Fields = s.Deploy.Fields.Merge(b.Deploy.Fields)
-	r.Deploy.Labels = s.Deploy.Labels.Merge(b.Deploy.Labels)
-	r.Fields = s.Fields.Merge(b.Fields)
-	r.Environment = s.Environment.Merge(b.Environment)
-	r.Labels = s.Labels.Merge(b.Labels)
-	return r
+func (s *Service) Merge(b Service) {
+	s.Deploy.Fields.Merge(b.Deploy.Fields)
+	s.Deploy.Labels.Merge(b.Deploy.Labels)
+	s.Environment.Merge(b.Environment)
+	s.Fields.Merge(b.Fields)
+	s.Labels.Merge(b.Labels)
 }
 
 type Deploy struct {
@@ -35,18 +34,15 @@ type Deploy struct {
 
 type Fields map[string]interface{}
 
-func (f Fields) Merge(b Fields) Fields {
-	if f == nil && b == nil {
-		return nil
+func (l Fields) Merge(b Fields) error {
+	for k, v := range b {
+		x, err := merge(l[k], v)
+		if err != nil {
+			return err
+		}
+		l[k] = x
 	}
-	r := make(map[string]interface{})
-	for key, value := range f {
-		r[key] = value
-	}
-	for key, value := range b {
-		r[key] = value
-	}
-	return r
+	return nil
 }
 
 // StringMap represents a map of string to string or array of key/values
@@ -55,18 +51,30 @@ func (f Fields) Merge(b Fields) Fields {
 // label and environment fields in the service definitions use this type.
 type StringMap map[string]*string
 
-func (m StringMap) Merge(b StringMap) StringMap {
-	if m == nil && b == nil {
-		return nil
+func (l StringMap) Merge(b StringMap) {
+	for k, v := range b {
+		l[k] = v
 	}
-	r := make(map[string]*string)
-	for key, value := range m {
-		r[key] = value
+}
+
+func merge(a interface{}, b interface{}) (interface{}, error) {
+	switch x := b.(type) {
+	case map[interface{}]interface{}:
+		y, ok := a.(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.New("incompatible types")
+		}
+		for k, v := range x {
+			z, err := merge(y[k], v)
+			if err != nil {
+				return nil, err
+			}
+			y[k] = z
+		}
+		return y, nil
+	default:
+		return nil, errors.Errorf("unknown type %T", x)
 	}
-	for key, value := range b {
-		r[key] = value
-	}
-	return r
 }
 
 func (l StringMap) Get(key string) string {
