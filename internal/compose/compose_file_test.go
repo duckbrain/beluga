@@ -160,8 +160,8 @@ func TestMergeService(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			r := tC.a.Merge(tC.b)
-			assertEqual(t, tC.result, r)
+			tC.a.Merge(tC.b)
+			assertEqual(t, tC.result, tC.a)
 		})
 	}
 }

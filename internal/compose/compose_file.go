@@ -13,9 +13,9 @@ type File struct {
 }
 
 type Service struct {
-	Deploy      Deploy    `yaml:"deploy"`
-	Labels      StringMap `yaml:"labels"`
-	Environment StringMap `yaml:"environment"`
+	Deploy      Deploy    `yaml:"deploy,omitempty"`
+	Labels      StringMap `yaml:"labels,omitempty"`
+	Environment StringMap `yaml:"environment,omitempty"`
 	Fields      Fields    `yaml:"-,inline"`
 }
 
@@ -34,13 +34,16 @@ type Deploy struct {
 
 type Fields map[string]interface{}
 
-func (l Fields) Merge(b Fields) error {
+func (l *Fields) Merge(b Fields) error {
+	if l == nil {
+		*l = make(Fields)
+	}
 	for k, v := range b {
-		x, err := merge(l[k], v)
+		x, err := merge((*l)[k], v)
 		if err != nil {
 			return err
 		}
-		l[k] = x
+		(*l)[k] = x
 	}
 	return nil
 }
@@ -51,18 +54,36 @@ func (l Fields) Merge(b Fields) error {
 // label and environment fields in the service definitions use this type.
 type StringMap map[string]*string
 
-func (l StringMap) Merge(b StringMap) {
+func (l *StringMap) Merge(b StringMap) {
+	if *l == nil {
+		*l = make(StringMap)
+	}
 	for k, v := range b {
-		l[k] = v
+		(*l)[k] = v
 	}
 }
 
 func merge(a interface{}, b interface{}) (interface{}, error) {
 	switch x := b.(type) {
+	case string, int, int64:
+		return x, nil
 	case map[interface{}]interface{}:
 		y, ok := a.(map[interface{}]interface{})
 		if !ok {
-			return nil, errors.New("incompatible types")
+			return nil, errors.Errorf("incompatible types %T and %T", a, b)
+		}
+		for k, v := range x {
+			z, err := merge(y[k], v)
+			if err != nil {
+				return nil, err
+			}
+			y[k] = z
+		}
+		return y, nil
+	case map[string]interface{}:
+		y, ok := a.(map[string]interface{})
+		if !ok {
+			return nil, errors.Errorf("incompatible types %T and %T", a, b)
 		}
 		for k, v := range x {
 			z, err := merge(y[k], v)

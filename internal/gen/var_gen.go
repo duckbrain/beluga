@@ -38,12 +38,12 @@ func (v Vars) Swap(i, j int) {
 }
 
 var vars = Vars{
-	{Name: "Application", Desc: "If provided, name of the (sub)application to compile"},
+	{Name: "Application", Desc: "If provided, name of the (sub)application to compile", GenerateAccessor: true},
 	{Name: "DockerContext", Desc: "Context of the docker build, defaults to root of the project", GenerateAccessor: true},
 	{Name: "Dockerfile", Desc: "Dockerfile to use in docker build, defaults `Dockerfile` in the context directory (like docker does)", GenerateAccessor: true},
-	{Name: "DockerComposeTemplate", Desc: "A template docker-compose file that may contain modifies the compose file to work in different contexts", GenerateAccessor: true},
+	{Name: "ComposeTemplate", Desc: "A template docker-compose file that may contain modifies the compose file to work in different contexts", GenerateAccessor: true},
 	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately.", GenerateAccessor: true},
-	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used."},
+	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used.", GenerateAccessor: true},
 	{Name: "GitDefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master."},
 	{Name: "Image", Desc: "Docker image path to push to after build", GenerateAccessor: true},
 	{Name: "Registry", Desc: "Docker registry to log into before pushing", GenerateAccessor: true},
@@ -51,7 +51,7 @@ var vars = Vars{
 	{Name: "RegistryUsername", Desc: "Username to use to log into Docker registry", GenerateAccessor: true},
 	{Name: "StackName", Desc: "", GenerateAccessor: true},
 	{Name: "Variant", Desc: "Variant build of the application. This is helpful for situations where one application is deployed with different builds for different settings."},
-	{Name: "Version", Desc: "Version of the application being built/deployed"},
+	{Name: "Version", Desc: "Version of the application being built/deployed", GenerateAccessor: true},
 }
 
 var t = template.Must(template.New("").Parse(`

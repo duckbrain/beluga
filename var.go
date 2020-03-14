@@ -3,25 +3,25 @@
 package beluga
 
 const (
-	varApplication           = "BELUGA_APPLICATION"
-	varDockerComposeTemplate = "BELUGA_DOCKER_COMPOSE_TEMPLATE"
-	varDockerContext         = "BELUGA_DOCKER_CONTEXT"
-	varDockerfile            = "BELUGA_DOCKERFILE"
-	varDomain                = "BELUGA_DOMAIN"
-	varEnvironment           = "BELUGA_ENVIRONMENT"
-	varGitDefaultBranch      = "BELUGA_GIT_DEFAULT_BRANCH"
-	varImage                 = "BELUGA_IMAGE"
-	varRegistry              = "BELUGA_REGISTRY"
-	varRegistryPassword      = "BELUGA_REGISTRY_PASSWORD"
-	varRegistryUsername      = "BELUGA_REGISTRY_USERNAME"
-	varStackName             = "BELUGA_STACK_NAME"
-	varVariant               = "BELUGA_VARIANT"
-	varVersion               = "BELUGA_VERSION"
+	varApplication      = "BELUGA_APPLICATION"
+	varComposeTemplate  = "BELUGA_COMPOSE_TEMPLATE"
+	varDockerContext    = "BELUGA_DOCKER_CONTEXT"
+	varDockerfile       = "BELUGA_DOCKERFILE"
+	varDomain           = "BELUGA_DOMAIN"
+	varEnvironment      = "BELUGA_ENVIRONMENT"
+	varGitDefaultBranch = "BELUGA_GIT_DEFAULT_BRANCH"
+	varImage            = "BELUGA_IMAGE"
+	varRegistry         = "BELUGA_REGISTRY"
+	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
+	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
+	varStackName        = "BELUGA_STACK_NAME"
+	varVariant          = "BELUGA_VARIANT"
+	varVersion          = "BELUGA_VERSION"
 )
 
 var knownVarNames = []string{
 	varApplication,
-	varDockerComposeTemplate,
+	varComposeTemplate,
 	varDockerContext,
 	varDockerfile,
 	varDomain,
@@ -36,10 +36,15 @@ var knownVarNames = []string{
 	varVersion,
 }
 
+// If provided, name of the (sub)application to compile
+func (e Environment) Application() string {
+	return e[varApplication]
+}
+
 // A template docker-compose file that may contain modifies the compose file
 // to work in different contexts
-func (e Environment) DockerComposeTemplate() string {
-	return e[varDockerComposeTemplate]
+func (e Environment) ComposeTemplate() string {
+	return e[varComposeTemplate]
 }
 
 // Context of the docker build, defaults to root of the project
@@ -58,6 +63,12 @@ func (e Environment) Dockerfile() string {
 // appropriately.
 func (e Environment) Domain() string {
 	return e[varDomain]
+}
+
+// Environment to deploy to. "review", "staging", "production" are defaults,
+// but any string may be used.
+func (e Environment) Environment() string {
+	return e[varEnvironment]
 }
 
 // Docker image path to push to after build
@@ -82,4 +93,9 @@ func (e Environment) RegistryUsername() string {
 
 func (e Environment) StackName() string {
 	return e[varStackName]
+}
+
+// Version of the application being built/deployed
+func (e Environment) Version() string {
+	return e[varVersion]
 }

@@ -2,7 +2,6 @@ package beluga
 
 import (
 	"log"
-	"os"
 	"sort"
 	"strings"
 
@@ -41,22 +40,6 @@ func Env() Environment {
 
 	// Try to fill in blanks with git
 	gitEnvRead(e)
-
-	// Compute docker-compose.yaml|yml
-	if e[varDockerComposeFile] == "" {
-		chkFile := func(f string) bool {
-			if _, err := os.Stat(f); err == nil {
-				e[varDockerComposeFile] = f
-				return true
-			}
-			return false
-		}
-		switch {
-		case chkFile("docker-compose.beluga.yaml"):
-		case chkFile("docker-compose.yaml"):
-		case chkFile("docker-compose.yml"):
-		}
-	}
 
 	return e
 }

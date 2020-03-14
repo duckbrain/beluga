@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
+
+var ctx context.Context = context.TODO()
 
 func must(err error) {
 	if err != nil {
@@ -37,6 +40,9 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

@@ -1,7 +1,6 @@
 package beluga
 
 import (
-	"fmt"
 	"net/url"
 )
 
@@ -21,10 +20,6 @@ func gitlabEnvRead(e Environment) {
 		environment = envStaging
 	}
 	domain := gitlabDomain(e)
-	dockerHost := ""
-	if domain != "" {
-		dockerHost = fmt.Sprintf("tcp://%v", domain)
-	}
 
 	image = e["CI_REGISTRY_IMAGE"] + ":" + e["CI_COMMIT_REF_SLUG"]
 	if environment == envStaging {
@@ -40,7 +35,6 @@ func gitlabEnvRead(e Environment) {
 		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
 		varImage:            image,
 		varDomain:           domain,
-		varDeployDockerHost: dockerHost,
 	})
 
 	e.MergeMissing(env)

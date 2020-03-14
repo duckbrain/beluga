@@ -13,8 +13,7 @@ var deployCmd = &cobra.Command{
 	Short:   "Deploy an application to a docker daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		env := beluga.Env()
-		must(env.Deployer().Deploy(env))
+		must(beluga.New().Deploy(ctx))
 	},
 }
 
@@ -24,18 +23,16 @@ var teardownCmd = &cobra.Command{
 	Short:   "Teardown an application from a docker daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		env := beluga.Env()
-		must(env.Deployer().Teardown(env))
+		must(beluga.New().Teardown(ctx))
 	},
 }
 
-var stackCmd = &cobra.Command{
-	Use:   "stack",
+var composeFileCmd = &cobra.Command{
+	Use:   "compose-file",
 	Short: "Print out the docker-compose stack that can be deployed",
 	Run: func(cmd *cobra.Command, args []string) {
 		defer handlePanic()
-		env := beluga.Env()
-		contents, err := env.ComposeFileContents()
+		contents, err := beluga.New().ComposeFile(ctx)
 		must(err)
 		fmt.Println(contents)
 	},
@@ -44,5 +41,5 @@ var stackCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(teardownCmd)
-	rootCmd.AddCommand(stackCmd)
+	rootCmd.AddCommand(composeFileCmd)
 }
