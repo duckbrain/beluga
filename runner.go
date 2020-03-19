@@ -6,15 +6,18 @@ import (
 	"os/exec"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type Runner struct {
-	Env Environment
+	Env    Environment
+	Logger logrus.StdLogger
 }
 
 func New() Runner {
 	return Runner{
-		Env: Env(),
+		Env:    Env(),
+		Logger: logrus.New(),
 	}
 }
 
@@ -44,10 +47,14 @@ func (r Runner) ComposeFile(ctx context.Context) (string, error) {
 	return composeTemplate(string(out), r.Env.ComposeTemplate(), r.Env)
 }
 
+func (r Runner) StackName() string {
+	return r.Env[varStackName]
+}
+
 func (r Runner) Deploy(ctx context.Context) error {
-	panic("not implemented")
+	return r.deployer().Deploy(ctx, r)
 }
 
 func (r Runner) Teardown(ctx context.Context) error {
-	panic("not implemented")
+	return r.deployer().Deploy(ctx, r)
 }
