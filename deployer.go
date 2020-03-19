@@ -30,24 +30,25 @@ func (d dummyTransport) RoundTrip(*http.Request) (*http.Response, error) {
 func (r Runner) deployer() Deployer {
 	host := r.Env["DOCKER_HOST"]
 
-	switch host[:strings.Index(host, ":")] {
-	case "portainer", "portainer-insecure":
-		deployer := &portainerDeploy{}
-		client, err := portainer.New(host, deployer)
-		if err != nil {
-			panic(err)
+	if i := strings.Index(host, ":"); i > 0 {
+		switch host[:i] {
+		case "portainer", "portainer-insecure":
+			deployer := &portainerDeploy{}
+			client, err := portainer.New(host, deployer)
+			if err != nil {
+				panic(err)
+			}
+			if r.DryRun {
+				client.Client.Transport = dummyTransport{}
+			}
+			client.Logger = r.Logger
+			deployer.Client = client
+			return deployer
+		case "ssh":
+			panic("SSH not implemented")
 		}
-		if r.DryRun {
-			client.Client.Transport = dummyTransport{}
-		}
-		client.Logger = r.Logger
-		deployer.Client = client
-		return deployer
-	case "ssh":
-		panic("SSH not implemented")
-	default:
-		return r.docker()
 	}
+	return r.docker()
 }
 
 func (r Runner) docker() dockerRunner {
@@ -81,14 +82,14 @@ func (d dockerRunner) execOutput(c *exec.Cmd) (string, error) {
 	return buf.String(), err
 }
 
-func (d dockerRunner) SwarmEnabled() (bool, error) {
-	status, err := d.execOutput(exec.Command(
-		"docker", "info", "format", "{{ .Swarm.LocalNodeState }}"))
+func (d dockerRunner) SwarmEnabled(ctx context.Context) (bool, error) {
+	status, err := d.execOutput(exec.CommandContext(ctx,
+		"docker", "info", "--format", "{{ .Swarm.LocalNodeState }}"))
 	return status == "active", err
 }
 
-func (d dockerRunner) Build(context, dockerfile, tag string) error {
-	return d.Exec(exec.Command(
+func (d dockerRunner) Build(ctx context.Context, context, dockerfile, tag string) error {
+	return d.Exec(exec.CommandContext(ctx,
 		"docker", "build",
 		context,
 		"-f", dockerfile,
@@ -96,16 +97,16 @@ func (d dockerRunner) Build(context, dockerfile, tag string) error {
 	))
 }
 
-func (d dockerRunner) Tag(src, dst string) error {
-	return d.Exec(exec.Command("docker", "tag", src, dst))
+func (d dockerRunner) Tag(ctx context.Context, src, dst string) error {
+	return d.Exec(exec.CommandContext(ctx, "docker", "tag", src, dst))
 }
 
-func (d dockerRunner) Push(tag string) error {
-	return d.Exec(exec.Command("docker", "push", tag))
+func (d dockerRunner) Push(ctx context.Context, tag string) error {
+	return d.Exec(exec.CommandContext(ctx, "docker", "push", tag))
 }
 
-func (d dockerRunner) Login(hostname, username, password string) error {
-	return d.Exec(exec.Command(
+func (d dockerRunner) Login(ctx context.Context, hostname, username, password string) error {
+	return d.Exec(exec.CommandContext(ctx,
 		"docker", "login",
 		hostname,
 		"-u", username,
@@ -113,19 +114,19 @@ func (d dockerRunner) Login(hostname, username, password string) error {
 	))
 }
 
-func (d dockerRunner) ComposeConfig() (string, error) {
-	return d.execOutput(exec.Command("docker-compose", "config"))
+func (d dockerRunner) ComposeConfig(ctx context.Context) (string, error) {
+	return d.execOutput(exec.CommandContext(ctx, "docker-compose", "config"))
 }
-func (d dockerRunner) ComposeUp(composeFile, stackName string) error {
-	return d.Exec(exec.Command(
+func (d dockerRunner) ComposeUp(ctx context.Context, composeFile, stackName string) error {
+	return d.Exec(exec.CommandContext(ctx,
 		"docker-compose",
 		"--file", composeFile,
 		"--project-name", stackName,
 		"up",
 		"--detach", "--no-build"))
 }
-func (d dockerRunner) ComposeDown(composeFile, stackName string) error {
-	return d.Exec(exec.Command(
+func (d dockerRunner) ComposeDown(ctx context.Context, composeFile, stackName string) error {
+	return d.Exec(exec.CommandContext(ctx,
 		"docker-compose",
 		"--file", composeFile,
 		"--project-name", stackName,
@@ -133,16 +134,16 @@ func (d dockerRunner) ComposeDown(composeFile, stackName string) error {
 		"--volumes", "--remove-orphans"))
 }
 
-func (d dockerRunner) StackDeploy(composeFile, stackName string) error {
-	return d.Exec(exec.Command(
+func (d dockerRunner) StackDeploy(ctx context.Context, composeFile, stackName string) error {
+	return d.Exec(exec.CommandContext(ctx,
 		"docker", "stack", "deploy",
 		"--compose-file", composeFile,
 		"--prune",
 		"--with-registry-auth",
 		stackName))
 }
-func (d dockerRunner) StackRemove(stackName string) error {
-	return d.Exec(exec.Command("docker", "stack", "rm", stackName))
+func (d dockerRunner) StackRemove(ctx context.Context, stackName string) error {
+	return d.Exec(exec.CommandContext(ctx, "docker", "stack", "rm", stackName))
 }
 
 func writeComposeFile(ctx context.Context, opts DeployOpts) (filename string, err error) {
@@ -163,7 +164,7 @@ func writeComposeFile(ctx context.Context, opts DeployOpts) (filename string, er
 
 func (d dockerRunner) Deploy(ctx context.Context, opts DeployOpts) error {
 	stackName := opts.StackName()
-	swarmMode, err := d.SwarmEnabled()
+	swarmMode, err := d.SwarmEnabled(ctx)
 	if err != nil {
 		return err
 	}
@@ -178,12 +179,12 @@ func (d dockerRunner) Deploy(ctx context.Context, opts DeployOpts) error {
 	if swarmMode {
 		run = d.StackDeploy
 	}
-	return run(composeFile, stackName)
+	return run(ctx, composeFile, stackName)
 }
 
 func (d dockerRunner) Teardown(ctx context.Context, opts DeployOpts) error {
 	stackName := opts.StackName()
-	swarmMode, err := d.SwarmEnabled()
+	swarmMode, err := d.SwarmEnabled(ctx)
 	if err != nil {
 		return err
 	}
@@ -194,9 +195,9 @@ func (d dockerRunner) Teardown(ctx context.Context, opts DeployOpts) error {
 			return err
 		}
 		defer os.Remove(composeFile)
-		return d.ComposeDown(composeFile, stackName)
+		return d.ComposeDown(ctx, composeFile, stackName)
 	} else {
-		return d.StackRemove(stackName)
+		return d.StackRemove(ctx, stackName)
 	}
 }
 
@@ -208,6 +209,17 @@ type portainerDeploy struct {
 }
 
 type Errors []error
+
+func (e *Errors) Append(err error) {
+	*e = append(*e, err)
+}
+
+func (e Errors) Err() error {
+	if len(e) > 0 {
+		return e
+	}
+	return nil
+}
 
 func (e Errors) Error() string {
 	s := ""
@@ -251,9 +263,9 @@ func (c *portainerDeploy) tryEndpoints(action func(endpoint portainer.Endpoint) 
 		if err == nil {
 			return nil
 		}
-		errors = append(errors, err)
+		errors.Append(err)
 	}
-	return errors
+	return errors.Err()
 }
 
 func (c *portainerDeploy) findStack(endpointID int64, name string) (*portainer.Stack, error) {

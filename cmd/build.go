@@ -10,7 +10,7 @@ var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Builds a docker image and pushes it to the registry",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runner.Build(buildOpts)
+		return runner.Build(ctx, buildOpts)
 	},
 }
 

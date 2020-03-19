@@ -49,6 +49,21 @@ func (e Environment) DefaultBranch() string {
 	return e[varDefaultBranch]
 }
 
+func (e Environment) Validate() error {
+	errs := Errors{}
+
+	// Must be set
+	for _, key := range []string{
+		varStackName,
+	} {
+		if v := e[key]; v == "" {
+			errs.Append(errors.Errorf("%v must be non-empty", key))
+		}
+	}
+
+	return errs.Err()
+}
+
 func (e Environment) Get(key, fallback string) string {
 	v := e[key]
 	if v == "" {

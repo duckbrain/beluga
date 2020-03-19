@@ -25,8 +25,8 @@ func New() *Runner {
 
 // Exec runs a command in the Beluga context with stderr and stdout bound to the parent process
 func (r *Runner) Exec(c *exec.Cmd) error {
+	r.Logger.Println(c.String())
 	if r.DryRun {
-		r.Logger.Println(c.String())
 		return nil
 	}
 	var err error
@@ -48,7 +48,7 @@ func (r *Runner) Exec(c *exec.Cmd) error {
 
 func (r *Runner) ComposeFile(ctx context.Context) (string, error) {
 	d := r.docker()
-	out, err := d.ComposeConfig()
+	out, err := d.ComposeConfig(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -72,12 +72,12 @@ type BuildOpts struct {
 	Push bool
 }
 
-func (r *Runner) Build(opts BuildOpts) error {
+func (r *Runner) Build(ctx context.Context, opts BuildOpts) error {
 	e := r.Env
 	d := r.docker()
 
 	if e.RegistryUsername() != "" {
-		err := d.Login(e.Registry(), e.RegistryUsername(), e.RegistryPassword())
+		err := d.Login(ctx, e.Registry(), e.RegistryUsername(), e.RegistryPassword())
 		if err != nil {
 			return err
 		}
@@ -88,13 +88,13 @@ func (r *Runner) Build(opts BuildOpts) error {
 
 	for _, image := range images {
 		if builtImage == "" {
-			err := d.Build(e.Context(), e.Dockerfile(), image)
+			err := d.Build(ctx, e.Context(), e.Dockerfile(), image)
 			if err != nil {
 				return err
 			}
 			builtImage = image
 		} else {
-			err := d.Tag(builtImage, image)
+			err := d.Tag(ctx, builtImage, image)
 			if err != nil {
 				return err
 			}
@@ -103,7 +103,7 @@ func (r *Runner) Build(opts BuildOpts) error {
 
 	if opts.Push {
 		for _, image := range images {
-			err := d.Push(image)
+			err := d.Push(ctx, image)
 			if err != nil {
 				return err
 			}

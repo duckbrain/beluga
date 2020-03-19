@@ -6,28 +6,13 @@ import (
 	"os"
 
 	"github.com/duckbrain/beluga"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var ctx context.Context = context.TODO()
 var runner = beluga.New()
-
-func must(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func handlePanic() {
-	msg := recover()
-	if err, ok := msg.(error); ok {
-		fmt.Printf("beluga: %v\n", err)
-		os.Exit(1)
-	} else if msg != nil {
-		fmt.Printf("beluga: unknown error: %v\n", msg)
-		os.Exit(2)
-	}
-}
+var verbose = false
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -40,7 +25,13 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return nil
+		verbose = verbose || runner.DryRun
+		if !verbose {
+			l := logrus.New()
+			l.SetLevel(logrus.FatalLevel)
+			runner.Logger = l
+		}
+		return runner.Env.Validate()
 	},
 }
 
@@ -54,13 +45,6 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.beluga.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentFlags().BoolVarP(&runner.DryRun, "dry-run", "d", false, "Show commands to run instead of running them")
+	rootCmd.PersistentFlags().BoolVarP(&runner.DryRun, "dry-run", "d", false, "Don't run commands; implies --verbose")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of what commands are being run.")
 }
