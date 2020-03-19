@@ -5,6 +5,7 @@ import (
 	"context"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -20,6 +21,12 @@ const (
 	SwarmMode   DeployMode = 1
 )
 
+type dummyTransport struct{}
+
+func (d dummyTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
 func (r Runner) deployer() Deployer {
 	host := r.Env["DOCKER_HOST"]
 
@@ -29,6 +36,9 @@ func (r Runner) deployer() Deployer {
 		client, err := portainer.New(host, deployer)
 		if err != nil {
 			panic(err)
+		}
+		if r.DryRun {
+			client.Client.Transport = dummyTransport{}
 		}
 		client.Logger = r.Logger
 		deployer.Client = client
@@ -64,12 +74,17 @@ type BuildInfo interface {
 	DockerImage() string
 }
 
-func (d dockerRunner) SwarmEnabled() (bool, error) {
-	c := exec.Command("docker", "info", "format", "{{ .Swarm.LocalNodeState }}")
+func (d dockerRunner) execOutput(c *exec.Cmd) (string, error) {
 	buf := new(bytes.Buffer)
 	c.Stdout = buf
 	err := d.Exec(c)
-	return buf.String() == "active", err
+	return buf.String(), err
+}
+
+func (d dockerRunner) SwarmEnabled() (bool, error) {
+	status, err := d.execOutput(exec.Command(
+		"docker", "info", "format", "{{ .Swarm.LocalNodeState }}"))
+	return status == "active", err
 }
 
 func (d dockerRunner) Build(context, dockerfile, tag string) error {
@@ -98,6 +113,9 @@ func (d dockerRunner) Login(hostname, username, password string) error {
 	))
 }
 
+func (d dockerRunner) ComposeConfig() (string, error) {
+	return d.execOutput(exec.Command("docker-compose", "config"))
+}
 func (d dockerRunner) ComposeUp(composeFile, stackName string) error {
 	return d.Exec(exec.Command(
 		"docker-compose",

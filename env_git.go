@@ -27,7 +27,7 @@ func gitEnvRead(e Environment) {
 		}
 	}
 	if environment == "" {
-		if branch == e[varGitDefaultBranch] {
+		if branch == e.DefaultBranch() {
 			environment = envStaging
 		} else {
 			environment = envReview

@@ -14,13 +14,10 @@ import (
 )
 
 type Var struct {
-	Name string
-	// GenerateAccessor tells the generator to generate an access func for the
-	// variable so a custom one can be written.
-	GenerateAccessor bool
-
-	// Desc provides a description to annotate docs and generated access funcs
-	Desc string
+	Name       string
+	OmitGetter bool
+	OmitPrefix bool
+	Desc       string
 }
 
 type Vars []Var
@@ -38,20 +35,20 @@ func (v Vars) Swap(i, j int) {
 }
 
 var vars = Vars{
-	{Name: "Application", Desc: "If provided, name of the (sub)application to compile", GenerateAccessor: true},
-	{Name: "DockerContext", Desc: "Context of the docker build, defaults to root of the project", GenerateAccessor: true},
-	{Name: "Dockerfile", Desc: "Dockerfile to use in docker build, defaults `Dockerfile` in the context directory (like docker does)", GenerateAccessor: true},
-	{Name: "ComposeTemplate", Desc: "A template docker-compose file that may contain modifies the compose file to work in different contexts", GenerateAccessor: true},
-	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately.", GenerateAccessor: true},
-	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used.", GenerateAccessor: true},
-	{Name: "GitDefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master."},
-	{Name: "Image", Desc: "Docker image path to push to after build", GenerateAccessor: true},
-	{Name: "Registry", Desc: "Docker registry to log into before pushing", GenerateAccessor: true},
-	{Name: "RegistryPassword", Desc: "Password to use to log into Docker registry", GenerateAccessor: true},
-	{Name: "RegistryUsername", Desc: "Username to use to log into Docker registry", GenerateAccessor: true},
-	{Name: "StackName", Desc: "", GenerateAccessor: true},
-	{Name: "Variant", Desc: "Variant build of the application. This is helpful for situations where one application is deployed with different builds for different settings."},
-	{Name: "Version", Desc: "Version of the application being built/deployed", GenerateAccessor: true},
+	{Name: "Application", Desc: "If provided, name of the (sub)application to compile"},
+	{Name: "ComposeFile", Desc: "Used by docker-compose to find docker-compose file(s) for deploying", OmitGetter: true},
+	{Name: "Context", Desc: "Context of the docker build, defaults to root of the project"},
+	{Name: "Dockerfile", Desc: "Dockerfile to use in docker build, defaults `Dockerfile` in the context directory (like docker does)"},
+	{Name: "ComposeTemplate", Desc: "A template docker-compose file that may contain modifies the compose file to work in different contexts"},
+	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately."},
+	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used."},
+	{Name: "DefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master.", OmitGetter: true},
+	{Name: "Image", Desc: "Docker image path to push to after build"},
+	{Name: "Registry", Desc: "Docker registry to log into before pushing"},
+	{Name: "RegistryPassword", Desc: "Password to use to log into Docker registry"},
+	{Name: "RegistryUsername", Desc: "Username to use to log into Docker registry"},
+	{Name: "StackName", Desc: ""},
+	{Name: "Version", Desc: "Version of the application being built/deployed"},
 }
 
 var t = template.Must(template.New("").Parse(`
@@ -71,7 +68,7 @@ var knownVarNames = []string{
 {{end}} }
 
 {{ range .}}
-{{- if .GenerateAccessor }}
+{{- if not .OmitGetter }}
 {{.Comment}}
 func (e Environment) {{ .GoName }}() string {
 	return e[{{ .VarName }}]
@@ -144,7 +141,11 @@ func (v Var) VarName() string {
 }
 
 func (v Var) EnvName() string {
-	return "BELUGA_" + strings.ToUpper(flect.Underscore(v.Name))
+	n := strings.ToUpper(flect.Underscore(v.Name))
+	if !v.OmitPrefix {
+		n = "BELUGA_" + n
+	}
+	return n
 }
 
 func (v Var) Comment() string {

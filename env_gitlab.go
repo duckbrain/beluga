@@ -11,12 +11,16 @@ func gitlabEnvRead(e Environment) {
 		return
 	}
 
+	if e[varDefaultBranch] == "" {
+		e[varDefaultBranch] = e["CI_DEFAULT_BRANCH"]
+	}
+
 	var environment = envReview
 	var image string
 	env := parseVersion(e["CI_COMMIT_TAG"])
 	if env[varEnvironment] != "" {
 		environment = envProduction
-	} else if e["CI_COMMIT_REF_NAME"] == e[varGitDefaultBranch] {
+	} else if e["CI_COMMIT_REF_NAME"] == e[varDefaultBranch] {
 		environment = envStaging
 	}
 	domain := gitlabDomain(e)

@@ -12,33 +12,29 @@ import (
 	"github.com/gobuffalo/envy"
 )
 
+func init() {
+	// Load all environment variables
+	_ = envy.Load()
+}
+
 const (
 	envProduction = "production"
 	envStaging    = "staging"
 	envReview     = "review"
 )
 
-var defaultEnv = Environment{
-	varDockerContext:    ".",
-	varGitDefaultBranch: "master",
-}
-
 var envs = []func(Environment){}
 
 func Env() Environment {
-	// Start with the defaults
-	e := defaultEnv.clone()
-
-	// Load all environment variables
-	_ = envy.Load()
-	e.Merge(Environment(envy.Map()))
-
-	envReadEnvOverrides(e)
+	// Start with the environment variables
+	e := Environment(envy.Map())
 
 	// CI environments
 	for _, read := range envs {
 		read(e)
 	}
+
+	envReadEnvOverrides(e)
 
 	// Try to fill in blanks with git
 	gitEnvRead(e)
@@ -47,6 +43,11 @@ func Env() Environment {
 }
 
 type Environment map[string]string
+
+// Target branch for PRs/MRs. Defaults to master.
+func (e Environment) DefaultBranch() string {
+	return e[varDefaultBranch]
+}
 
 func (e Environment) Get(key, fallback string) string {
 	v := e[key]

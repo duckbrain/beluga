@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/duckbrain/beluga"
 	"github.com/spf13/cobra"
 )
 
 var ctx context.Context = context.TODO()
+var runner = beluga.New()
 
 func must(err error) {
 	if err != nil {
@@ -37,9 +39,6 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},
@@ -63,4 +62,5 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().BoolVarP(&runner.DryRun, "dry-run", "d", false, "Show commands to run instead of running them")
 }

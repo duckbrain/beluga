@@ -4,35 +4,35 @@ package beluga
 
 const (
 	varApplication      = "BELUGA_APPLICATION"
+	varComposeFile      = "BELUGA_COMPOSE_FILE"
 	varComposeTemplate  = "BELUGA_COMPOSE_TEMPLATE"
-	varDockerContext    = "BELUGA_DOCKER_CONTEXT"
+	varContext          = "BELUGA_CONTEXT"
+	varDefaultBranch    = "BELUGA_DEFAULT_BRANCH"
 	varDockerfile       = "BELUGA_DOCKERFILE"
 	varDomain           = "BELUGA_DOMAIN"
 	varEnvironment      = "BELUGA_ENVIRONMENT"
-	varGitDefaultBranch = "BELUGA_GIT_DEFAULT_BRANCH"
 	varImage            = "BELUGA_IMAGE"
 	varRegistry         = "BELUGA_REGISTRY"
 	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
 	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
 	varStackName        = "BELUGA_STACK_NAME"
-	varVariant          = "BELUGA_VARIANT"
 	varVersion          = "BELUGA_VERSION"
 )
 
 var knownVarNames = []string{
 	varApplication,
+	varComposeFile,
 	varComposeTemplate,
-	varDockerContext,
+	varContext,
+	varDefaultBranch,
 	varDockerfile,
 	varDomain,
 	varEnvironment,
-	varGitDefaultBranch,
 	varImage,
 	varRegistry,
 	varRegistryPassword,
 	varRegistryUsername,
 	varStackName,
-	varVariant,
 	varVersion,
 }
 
@@ -48,8 +48,8 @@ func (e Environment) ComposeTemplate() string {
 }
 
 // Context of the docker build, defaults to root of the project
-func (e Environment) DockerContext() string {
-	return e[varDockerContext]
+func (e Environment) Context() string {
+	return e[varContext]
 }
 
 // Dockerfile to use in docker build, defaults `Dockerfile` in the context
