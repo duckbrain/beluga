@@ -126,10 +126,6 @@ var stackNewCmd = &cobra.Command{
 		if err != nil {
 			return errors.Wrap(err, "read compose file")
 		}
-		stack.Type, err = portainer.ParseStackType(typeName)
-		if err != nil {
-			return err
-		}
 		s, err := client.NewStack(stack, composeFileContents)
 		if err != nil {
 			return err

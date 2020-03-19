@@ -134,11 +134,10 @@ func (env Env) UnmarshalJSON(data []byte) error {
 }
 
 type Stack struct {
-	ID         int64     `json:"Id"`
-	Name       string    `json:"Name"`
-	Type       StackType `json:"Type"`
-	EndpointID int64     `json:"EndpointId"`
-	Env        Env       `json:"Env"`
+	ID         int64  `json:"Id"`
+	Name       string `json:"Name"`
+	EndpointID int64  `json:"EndpointId"`
+	Env        Env    `json:"Env"`
 }
 
 type Stacks []Stack
@@ -272,7 +271,6 @@ func (c *Client) NewStack(s Stack, composeFileContents string) (newStack Stack, 
 		Method     string    `schema:"method"`
 		EndpointID int64     `schema:"endpointId"`
 	}{
-		Type:       s.Type,
 		Method:     "string",
 		EndpointID: s.EndpointID,
 	}
@@ -298,6 +296,8 @@ func (c *Client) NewStack(s Stack, composeFileContents string) (newStack Stack, 
 	}
 	if body.SwarmID == "" {
 		params.Type = Compose
+	} else {
+		params.Type = Swarm
 	}
 
 	err = c.do("POST", "/api/stacks", params, body, &newStack)
