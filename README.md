@@ -2,6 +2,8 @@
 
 A tool for building and deploying web applications in CI through Docker Compose or Swarm.
 
+- GitLab ![Pipeline Status](https://gitlab.com/duckbrain/beluga/badges/master/pipeline.svg)
+
 ## Commands
 
 ### `beluga build`
