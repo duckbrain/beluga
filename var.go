@@ -12,6 +12,8 @@ const (
 	varDomain           = "BELUGA_DOMAIN"
 	varEnvironment      = "BELUGA_ENVIRONMENT"
 	varImage            = "BELUGA_IMAGE"
+	varImages           = "BELUGA_IMAGES"
+	varImagesTemplate   = "BELUGA_IMAGES_TEMPLATE"
 	varRegistry         = "BELUGA_REGISTRY"
 	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
 	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
@@ -29,6 +31,8 @@ var knownVarNames = []string{
 	varDomain,
 	varEnvironment,
 	varImage,
+	varImages,
+	varImagesTemplate,
 	varRegistry,
 	varRegistryPassword,
 	varRegistryUsername,
@@ -71,9 +75,19 @@ func (e Environment) Environment() string {
 	return e[varEnvironment]
 }
 
-// Docker image path to push to after build
+// Primary (first) Docker image to push after build
 func (e Environment) Image() string {
 	return e[varImage]
+}
+
+// Docker images to push after build
+func (e Environment) Images() string {
+	return e[varImages]
+}
+
+// Go template for a space-separated list of Docker images to push after build
+func (e Environment) ImagesTemplate() string {
+	return e[varImagesTemplate]
 }
 
 // Docker registry to log into before pushing

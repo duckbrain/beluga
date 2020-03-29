@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/duckbrain/beluga"
 	"github.com/sirupsen/logrus"
@@ -29,7 +30,20 @@ var envCmd = &cobra.Command{
 			return errors.New("unknown format")
 		}
 
-		values, err := beluga.Env().Format(format, envOpts.All)
+		var keys []string
+		env := runner.Env
+
+		if len(args) > 0 {
+			keys = args
+		} else if envOpts.All {
+			keys = env.Keys()
+			sort.Strings(keys)
+		} else {
+			keys = env.CommonKeys()
+			sort.Strings(keys)
+		}
+
+		values, err := env.Format(format, keys)
 		if err != nil {
 			if values == nil {
 				return err

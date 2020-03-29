@@ -16,7 +16,6 @@ func gitlabEnvRead(e Environment) {
 	}
 
 	var environment = envReview
-	var image string
 	env := parseVersion(e["CI_COMMIT_TAG"])
 	if env[varEnvironment] != "" {
 		environment = envProduction
@@ -25,20 +24,13 @@ func gitlabEnvRead(e Environment) {
 	}
 	domain := gitlabDomain(e)
 
-	image = e["CI_REGISTRY_IMAGE"] + ":" + e["CI_COMMIT_REF_SLUG"]
-	if environment == envStaging {
-		image += " " + e["CI_REGISTRY_IMAGE"] + ":latest"
-	} else if environment == envProduction {
-		image = e["CI_REGISTRY_IMAGE"] + ":" + e[varVersion]
-	}
-
 	env.MergeMissing(Environment{
 		varEnvironment:      environment,
 		varRegistry:         e["CI_REGISTRY"],
 		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
 		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
-		varImage:            image,
 		varDomain:           domain,
+		varImagesTemplate:   `{{.Env.CI_REGISTRY_IMAGE}}:{{if .Env.CI_COMMIT_TAG}}{{.Env.CI_COMMIT_TAG}} {{.Env.CI_REGISTRY_IMAGE}}:latest{{else}}{{.Env.CI_COMMIT_REF_NAME}}{{end}}`,
 	})
 
 	e.MergeMissing(env)

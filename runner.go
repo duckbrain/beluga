@@ -17,9 +17,11 @@ type Runner struct {
 }
 
 func New() *Runner {
+	logger := logrus.New()
+
 	return &Runner{
-		Env:    Env(),
-		Logger: logrus.New(),
+		Env:    Env(logger),
+		Logger: logger,
 	}
 }
 
@@ -39,7 +41,7 @@ func (r *Runner) Exec(c *exec.Cmd) error {
 	if c.Stderr == nil {
 		c.Stderr = os.Stderr
 	}
-	c.Env, err = r.Env.Format(GoEnvFormat, true)
+	c.Env, err = r.Env.Format(GoEnvFormat, r.Env.Keys())
 	if err != nil {
 		return errors.Wrap(err, "generate environment list")
 	}
@@ -84,7 +86,7 @@ func (r *Runner) Build(ctx context.Context, opts BuildOpts) error {
 	}
 
 	builtImage := ""
-	images := strings.Fields(e.Image())
+	images := strings.Fields(e.Images())
 
 	for _, image := range images {
 		if builtImage == "" {
