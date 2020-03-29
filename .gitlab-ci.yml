@@ -6,10 +6,16 @@ beluga:build:
   stage: build
   image: duckbrain/beluga
   script:
-  - beluga env
+  - beluga env -f env BELUGA_DOMAIN BELUGA_ENVIRONMENT BELUGA_IMAGE > .env
   - beluga build
+  artifacts:
+    reports:
+      dotenv: .env
 
 beluga:deploy:
   stage: deploy
-  image: duckbrain/beluga
+  image: $BELUGA_IMAGE
   script: beluga deploy
+  environment:
+    name: $BELUGA_ENVIRONMENT
+    url: https://$BELUGA_DOMAIN
