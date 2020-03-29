@@ -14,6 +14,7 @@ const (
 	varImage            = "BELUGA_IMAGE"
 	varImages           = "BELUGA_IMAGES"
 	varImagesTemplate   = "BELUGA_IMAGES_TEMPLATE"
+	varOverrides        = "BELUGA_OVERRIDES"
 	varRegistry         = "BELUGA_REGISTRY"
 	varRegistryPassword = "BELUGA_REGISTRY_PASSWORD"
 	varRegistryUsername = "BELUGA_REGISTRY_USERNAME"
@@ -33,6 +34,7 @@ var knownVarNames = []string{
 	varImage,
 	varImages,
 	varImagesTemplate,
+	varOverrides,
 	varRegistry,
 	varRegistryPassword,
 	varRegistryUsername,
@@ -88,6 +90,12 @@ func (e Environment) Images() string {
 // Go template for a space-separated list of Docker images to push after build
 func (e Environment) ImagesTemplate() string {
 	return e[varImagesTemplate]
+}
+
+// YAML document with environment names or patterns as keys and variables to
+// override as values
+func (e Environment) Overrides() string {
+	return e[varOverrides]
 }
 
 // Docker registry to log into before pushing

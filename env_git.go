@@ -13,7 +13,7 @@ func cmdString(cmd string, args ...string) string {
 	return strings.TrimSpace(string(output))
 }
 
-func gitEnvRead(e Environment) {
+func gitEnvRead(e Environment) error {
 	versionTag := cmdString("git", "describe", "--tags", "--match", "v*", "--exclude \"v*-*\"")
 
 	branch := cmdString("git", "rev-parse", "--abbrev-ref", "HEAD")
@@ -40,4 +40,6 @@ func gitEnvRead(e Environment) {
 	}
 
 	e.MergeMissing(env)
+
+	return nil
 }

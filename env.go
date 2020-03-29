@@ -3,13 +3,12 @@ package beluga
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strings"
 	"text/template"
 
-	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 
 	"github.com/gobuffalo/envy"
 )
@@ -25,27 +24,22 @@ const (
 	envReview     = "review"
 )
 
-var envs = []func(Environment){}
-
-func Env(logger logrus.StdLogger) Environment {
+func Env(logger logrus.FieldLogger) Environment {
 	// Start with the environment variables
 	e := Environment(envy.Map())
 
-	// CI environments
-	for _, read := range envs {
-		read(e)
+	// Apply processors
+	for _, processor := range []func(Environment) error{
+		gitlabEnvRead,
+		gitEnvRead,
+		envParseImageTemplate,
+		envReadEnvOverrides,
+	} {
+		err := processor(e)
+		if err != nil {
+			logger.Warn(err)
+		}
 	}
-
-	envReadEnvOverrides(e)
-
-	// Parse the image tempate
-	err := envParseImageTemplate(e)
-	if err != nil {
-		logger.Println(err)
-	}
-
-	// Try to fill in blanks with git
-	gitEnvRead(e)
 
 	return e
 }
@@ -125,15 +119,27 @@ func (e Environment) clone() Environment {
 }
 
 // envReadEnvOverrides overrides values for a specific environment by reading
-// the value of the BELUGA_* variable as an env file.
-func envReadEnvOverrides(e Environment) {
-	v := e["BELUGA_"+strings.ToUpper(e[varEnvironment])]
-	s, err := godotenv.Unmarshal(v)
-	if err != nil {
-		log.Println("beluga: env parse: ", err)
+// the BELUGA_OVERRIDES variable as YAML and finding the environment in the root key.
+func envReadEnvOverrides(e Environment) error {
+	data := map[string]Environment{}
+	y := e.Overrides()
+	if y == "" {
+		return nil
 	}
 
-	e.Merge(Environment(s))
+	err := yaml.Unmarshal([]byte(y), &data)
+	if err != nil {
+		return err
+	}
+
+	env, ok := data[e.Environment()]
+	if !ok {
+		return nil
+	}
+
+	e.Merge(env)
+
+	return nil
 }
 
 func envParseImageTemplate(e Environment) error {

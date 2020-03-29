@@ -45,6 +45,7 @@ var vars = Vars{
 	{Name: "DefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master.", OmitGetter: true},
 	{Name: "Image", Desc: "Primary (first) Docker image to push after build"},
 	{Name: "Images", Desc: "Docker images to push after build"},
+	{Name: "Overrides", Desc: "YAML document with environment names or patterns as keys and variables to override as values"},
 	{Name: "ImagesTemplate", Desc: "Go template for a space-separated list of Docker images to push after build"},
 	{Name: "Registry", Desc: "Docker registry to log into before pushing"},
 	{Name: "RegistryPassword", Desc: "Password to use to log into Docker registry"},

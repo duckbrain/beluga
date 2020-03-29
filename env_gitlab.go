@@ -6,9 +6,9 @@ import (
 
 // See https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
 
-func gitlabEnvRead(e Environment) {
+func gitlabEnvRead(e Environment) error {
 	if e["GITLAB_CI"] == "" {
-		return
+		return nil
 	}
 
 	if e[varDefaultBranch] == "" {
@@ -34,6 +34,8 @@ func gitlabEnvRead(e Environment) {
 	})
 
 	e.MergeMissing(env)
+
+	return nil
 }
 
 func gitlabDomain(e Environment) string {
@@ -43,8 +45,4 @@ func gitlabDomain(e Environment) string {
 		return ""
 	}
 	return u.Hostname()
-}
-
-func init() {
-	envs = append(envs, gitlabEnvRead)
 }
