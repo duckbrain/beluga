@@ -12,7 +12,7 @@ import (
 
 var ctx context.Context = context.TODO()
 var runner = beluga.New()
-var verbose = false
+var quiet = false
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -25,8 +25,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		verbose = verbose || runner.DryRun
-		if !verbose {
+		if quiet {
 			l := logrus.New()
 			l.SetLevel(logrus.FatalLevel)
 			runner.Logger = l
@@ -45,6 +44,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&runner.DryRun, "dry-run", "d", false, "Don't run commands; implies --verbose")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of what commands are being run.")
+	rootCmd.PersistentFlags().BoolVarP(&runner.DryRun, "dry-run", "d", false, "Don't run commands or make API calls")
+	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "Don't print informational logging")
 }
