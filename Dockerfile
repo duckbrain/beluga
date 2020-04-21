@@ -1,15 +1,15 @@
-FROM golang:1.13 as builder
+FROM golang:1.14
 
-ENV GO111MODULE=on GOARCH=amd64 GOOS=linux
-RUN mkdir -p /code
+ENV GO111MODULE=on
 WORKDIR /code/
-COPY go.mod go.sum /code/
+COPY go.mod go.sum ./
 RUN go mod download
-COPY . /code/
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app . 
+COPY . ./
+RUN go env
+RUN go build -ldflags "-linkmode external -extldflags -static" -a -o /app ./cmd/beluga
 
 FROM alpine
 
-RUN apk add --no-cache docker docker-compose
-COPY --from=builder /code/app /usr/bin/beluga
+RUN apk add --no-cache bash docker docker-compose
+COPY --from=0 /app /usr/bin/beluga
 CMD [ "/usr/bin/beluga", "--help" ]
