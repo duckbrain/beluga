@@ -30,6 +30,7 @@ func gitlabEnvRead(e Environment) error {
 		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
 		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
 		varDomain:           domain,
+		varStackName:        e["CI_PROJECT_PATH_SLUG"],
 		varImagesTemplate:   `{{.Env.CI_REGISTRY_IMAGE}}:{{if .Env.CI_COMMIT_TAG}}{{.Env.CI_COMMIT_TAG}} {{.Env.CI_REGISTRY_IMAGE}}:latest{{else}}{{.Env.CI_COMMIT_REF_NAME}}{{end}}`,
 	})
 
