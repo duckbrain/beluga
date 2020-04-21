@@ -6,7 +6,7 @@ beluga:build:
   stage: build
   image: duckbrain/beluga
   script:
-  - beluga env -f env BELUGA_DOMAIN BELUGA_ENVIRONMENT BELUGA_IMAGE > .env
+  - beluga env -f env BELUGA_DOMAIN BELUGA_ENVIRONMENT BELUGA_IMAGE | tee .env
   - beluga build
   artifacts:
     reports:
