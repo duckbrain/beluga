@@ -34,6 +34,7 @@ func Env(logger logrus.FieldLogger) Environment {
 		gitEnvRead,
 		envParseImageTemplate,
 		envReadEnvOverrides,
+		envVarDefaults,
 	} {
 		err := processor(e)
 		if err != nil {
@@ -165,6 +166,14 @@ func envParseImageTemplate(e Environment) error {
 		e.MergeMissing(Environment{varImage: imgs[0]})
 		e[varImage] = imgs[0]
 	}
+	return nil
+}
+
+func envVarDefaults(e Environment) error {
+	e.MergeMissing(Environment{
+		varContext:    ".",
+		varDockerfile: "Dockerfile",
+	})
 	return nil
 }
 
