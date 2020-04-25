@@ -2,21 +2,26 @@ stages:
 - build
 - deploy
 
+variables:
+  BELUGA_IMAGES: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  COMPOSE_FILE: samples/gitlab/docker-compose.yaml
+
 beluga:build:
   stage: build
   image: duckbrain/beluga
   script:
   - beluga env
-  - beluga env -f env BELUGA_DOMAIN BELUGA_ENVIRONMENT BELUGA_IMAGE > .env
   - beluga build
-  artifacts:
-    reports:
-      dotenv: .env
 
 beluga:deploy:
   stage: deploy
-  image: $BELUGA_IMAGE
-  script: beluga deploy
+  image: $BELUGA_IMAGES
+  script:
+  - beluga deploy
+  - beluga env BELGUA_DOMAIN BELUGA_ENVIRONMENT > dotenv
   environment:
     name: $BELUGA_ENVIRONMENT
     url: https://$BELUGA_DOMAIN
+  artifacts:
+    reports:
+      dotenv: dotenv
