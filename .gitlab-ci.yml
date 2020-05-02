@@ -20,10 +20,9 @@ beluga:deploy:
   - beluga deploy
   after_script:
   - beluga env
-  - beluga env BELGUA_DOMAIN BELUGA_ENVIRONMENT > dotenv
+  - beluga env BELUGA_ENVIRONMENT > dotenv
   environment:
     name: $BELUGA_ENVIRONMENT
-    url: https://$BELUGA_DOMAIN
   artifacts:
     reports:
       dotenv: dotenv
