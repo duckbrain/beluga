@@ -18,6 +18,8 @@ beluga:deploy:
   image: $BELUGA_IMAGES
   script:
   - beluga deploy
+  after_script:
+  - beluga env
   - beluga env BELGUA_DOMAIN BELUGA_ENVIRONMENT > dotenv
   environment:
     name: $BELUGA_ENVIRONMENT
