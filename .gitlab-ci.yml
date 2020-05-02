@@ -18,11 +18,3 @@ beluga:deploy:
   image: $BELUGA_IMAGES
   script:
   - beluga deploy
-  after_script:
-  - beluga env
-  - beluga env BELUGA_ENVIRONMENT > dotenv
-  environment:
-    name: $BELUGA_ENVIRONMENT
-  artifacts:
-    reports:
-      dotenv: dotenv
