@@ -11,9 +11,9 @@ services:
     deploy:
       labels:
         - 'traefik.enable=true'
-        - 'traefik.http.routers.athens.rule=Host(`{{ .Env.Domain }}`)'
-        - 'traefik.http.services.athens.loadbalancer.server.port={{ $port }}'
-        - 'traefik.http.routers.athens.entrypoints=web'
+        - 'traefik.http.routers.{{ .Env.StackName }}.rule=Host(`{{ .Env.Domain }}`)'
+        - 'traefik.http.services.{{ .Env.StackName }}.loadbalancer.server.port={{ $port }}'
+        - 'traefik.http.routers.{{ .Env.StackName }}.entrypoints=web'
     networks:
       - default
       - proxy
