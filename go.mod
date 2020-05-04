@@ -10,7 +10,6 @@ require (
 	github.com/gorilla/schema v1.1.0
 	github.com/imdario/mergo v0.3.8
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/joho/godotenv v1.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.4.2

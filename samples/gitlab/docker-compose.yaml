@@ -5,3 +5,5 @@ services:
         image: hello-world
         environment:
             VERSION: '2'
+        labels:
+          com.example.deploy.port: 8080

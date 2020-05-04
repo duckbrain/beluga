@@ -1,0 +1,24 @@
+# This is a sample value for BELUGA_COMPOSE_TEMPLATE, where if a service has a
+# label "com.example.deploy.port", it will be annotated with Traefik related
+# deploy labels.
+#
+# In GitLab, this value would likely be set in the .gitlab-ci.yml as a literal block scalar string.
+
+services:
+  # {{ $port := .Service.Labels.Get "com.example.deploy.port" }}
+  # {{ if $port }}
+  BELUGA:
+    deploy:
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.athens.rule=Host(`{{ .Env.Domain }}`)'
+        - 'traefik.http.services.athens.loadbalancer.server.port={{ $port }}'
+        - 'traefik.http.routers.athens.entrypoints=web'
+    networks:
+      - default
+      - proxy
+  # {{ end }}
+networks:
+  proxy:
+    external:
+      name: traefik

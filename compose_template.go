@@ -1,20 +1,13 @@
 package beluga
 
 import (
-	"text/template"
-	"strconv"
 	"bytes"
-	"github.com/pkg/errors"
-	"github.com/duckbrain/beluga/internal/compose"
-	 "github.com/imdario/mergo"
-)
+	"text/template"
 
-type composeTemplateData struct {
-	Service struct{
-		Port uint16
-	}
-	Env Environment
-}
+	"github.com/duckbrain/beluga/internal/compose"
+	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
+)
 
 func composeTemplate(og, tmp string, env Environment) (string, error) {
 	if len(tmp) == 0 {
@@ -41,16 +34,11 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 	}
 
 	for name, service := range file.Services {
-		info := composeTemplateData{Env: env}
-		port, _ := strconv.ParseUint(service.Labels.Get("us.duckfam.beluga.port"), 10, 16)
-		info.Service.Port = uint16(port)
-
-		if info.Service.Port == 0 {
-			continue
-		}
-
 		s := new(bytes.Buffer)
-		err := t.Execute(s, info)
+		err := t.Execute(s, struct {
+			Service compose.Service
+			Env     Environment
+		}{service, env})
 		if err != nil {
 			return "", errors.Wrap(err, "execute template")
 		}
