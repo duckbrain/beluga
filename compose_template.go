@@ -5,9 +5,14 @@ import (
 	"text/template"
 
 	"github.com/duckbrain/beluga/internal/compose"
-	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 )
+
+type composeTemplateData struct {
+	Src     *compose.File
+	Service *compose.Service
+	Env     Environment
+}
 
 func composeTemplate(og, tmp string, env Environment) (string, error) {
 	if len(tmp) == 0 {
@@ -24,26 +29,22 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		return "", errors.Wrap(err, "yaml parse source")
 	}
 
-	parseTemplate := func(service compose.Service) (compose.File, error) {
+	parseTemplate := func(service *compose.Service) (*compose.File, error) {
 		s := new(bytes.Buffer)
-		err := t.Execute(s, struct {
-			Src     compose.File
-			Service compose.Service
-			Env     Environment
-		}{file, service, env})
+		err := t.Execute(s, composeTemplateData{file, service, env})
 		if err != nil {
-			return compose.File{}, errors.Wrap(err, "execute template")
+			return nil, errors.Wrap(err, "execute template")
 		}
 		f, err := compose.Parse(s.String())
 		return f, errors.Wrap(err, "yaml parse template output")
 	}
 
-	tFile, err := parseTemplate(compose.Service{})
+	tFile, err := parseTemplate(&compose.Service{})
 	if err != nil {
 		return "", err
 	}
 
-	err = mergo.MergeWithOverwrite(&file.Fields, tFile.Fields)
+	err = file.Merge(tFile)
 	if err != nil {
 		return "", errors.Wrap(err, "merging file base")
 	}
@@ -55,7 +56,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		}
 
 		if tService, ok := tFile.Services["BELUGA"]; ok {
-			err = mergo.MergeWithOverwrite(&service, tService)
+			err = service.Merge(tService)
 			if err != nil {
 				return "", errors.Wrapf(err, "merge service %v", name)
 			}
@@ -70,7 +71,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		}
 		service, ok := file.Services[name]
 		if ok {
-			err = mergo.MergeWithOverwrite(&service, tService)
+			err = service.Merge(tService)
 			if err != nil {
 				return "", errors.Wrapf(err, "merge template service %v", name)
 			}

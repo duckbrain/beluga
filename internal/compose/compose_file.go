@@ -3,15 +3,22 @@ package compose
 import (
 	"strings"
 
+	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v3"
 )
 
-func Parse(s string) (File, error) {
-	f := File{}
-	return f, yaml.Unmarshal([]byte(s), &f)
+func Parse(s string) (*File, error) {
+	f := &File{}
+	if err := yaml.Unmarshal([]byte(s), f); err != nil {
+		return f, err
+	}
+	for _, s := range f.Services {
+		s.file = f
+	}
+	return f, nil
 }
 
-func MustParse(s string) File {
+func MustParse(s string) *File {
 	f, err := Parse(s)
 	if err != nil {
 		panic(err)
@@ -20,8 +27,12 @@ func MustParse(s string) File {
 }
 
 type File struct {
-	Services map[string]Service `yaml:"services"`
-	Fields   Fields             `yaml:"-,inline"`
+	Services map[string]*Service `yaml:"services"`
+	Fields   Fields              `yaml:"-,inline"`
+}
+
+func (f *File) Merge(a *File) error {
+	return mergo.MergeWithOverwrite(&f.Fields, a.Fields)
 }
 
 func (f File) TryString() (string, error) {
@@ -35,6 +46,7 @@ func (f File) String() string {
 }
 
 type Service struct {
+	file        *File
 	Deploy      Deploy    `yaml:"deploy,omitempty"`
 	Labels      StringMap `yaml:"labels,omitempty"`
 	Environment StringMap `yaml:"environment,omitempty"`
@@ -52,6 +64,24 @@ func (s *Service) UnmarshalYAML(value *yaml.Node) error {
 	*s = Service(v)
 	if len(s.Networks) == 0 {
 		s.Networks = Networks{"default": {}}
+	}
+	return nil
+}
+
+func (s *Service) Merge(a *Service) error {
+	networks := s.Networks.Clone()
+	err := mergo.MergeWithOverwrite(s, *a)
+	if err != nil {
+		return err
+	}
+
+	if networks.IsZero() && len(s.file.Services) == 1 {
+		s.Networks = a.Networks.Clone()
+	} else {
+		for name, net := range a.Networks {
+			networks[name] = net
+		}
+		s.Networks = networks
 	}
 	return nil
 }
@@ -125,6 +155,14 @@ func (n Network) IsZero() bool {
 }
 
 type Networks map[string]Network
+
+func (n Networks) Clone() Networks {
+	c := Networks{}
+	for name, net := range n {
+		c[name] = net
+	}
+	return c
+}
 
 func (n Networks) Has(s string) bool {
 	_, ok := n[s]

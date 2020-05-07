@@ -71,7 +71,7 @@ services:
 				beluga-bar: hello-world
 `,
 			File{
-				Services: map[string]Service{
+				Services: map[string]*Service{
 					"foo": {
 						Labels: StringMap{
 							"beluga-foo": &helloWorld,
@@ -81,9 +81,7 @@ services:
 								"beluga-bar": &helloWorld,
 							},
 						},
-						Networks: Networks{
-							"default": {},
-						},
+						Networks: Networks{},
 						Fields: map[string]interface{}{
 							"image": "duckbrain/foo",
 						},

@@ -5,7 +5,7 @@
 # In GitLab, this value would likely be set in the .gitlab-ci.yml as a literal block scalar string.
 
 services:
-  {{ $port := .Service.Labels.Get "com.ec2software.port" }}
+  {{ $port := .Service.Labels.Get "com.example.deploy.port" }}
   {{ if $port }}
   BELUGA:
     deploy:
