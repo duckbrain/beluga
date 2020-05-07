@@ -30,17 +30,30 @@ services:
 		image: hello-world
 		labels:
 		- us.duckfam.beluga.port=8080
+		# implied networks: [ default ]
+	foo:
+		image: hello-world
+		labels:
+		- us.duckfam.beluga.port=7080
+		networks:
+			foo:
+	db:
+		image: postgres
 networks:
 	default:
 version: "3.0"
 `,
 			template: `
 services:
+	{{ if .Service.Labels.Get "us.duckfam.beluga.port" }}
 	BELUGA:
 		deploy:
 			labels:
 				"traefik.enable": "true"
-				"traefik.http.services.{{ .Env.StackName }}.loadbalancer.server.port": "{{ .Service.Port }}"
+				"traefik.http.services.{{ .Env.StackName }}.loadbalancer.server.port": "{{ .Service.Labels.Get "us.duckfam.beluga.port" }}"
+		networks:
+			- traefik
+	{{ end }}
 	backup:
 		image: example/backups
 networks:
@@ -59,9 +72,25 @@ services:
 				traefik.http.services.foobar.loadbalancer.server.port: "8080"
 		labels:
 			us.duckfam.beluga.port: "8080"
+		networks:
+			traefik: {}
+			default: {}
 		environment:
 			VERSION: "2"
 		image: hello-world
+	foo:
+		deploy:
+			labels:
+				traefik.enable: "true"
+				traefik.http.services.foobar.loadbalancer.server.port: "7080"
+		labels:
+			us.duckfam.beluga.port: "7080"
+		networks:
+			foo: {}
+			traefik: {}
+		image: hello-world
+	db:
+		image: postgres
 networks:
 	default: null
 	traefik:

@@ -38,11 +38,26 @@ type Service struct {
 	Deploy      Deploy    `yaml:"deploy,omitempty"`
 	Labels      StringMap `yaml:"labels,omitempty"`
 	Environment StringMap `yaml:"environment,omitempty"`
+	Networks    Networks  `yaml:"networks,omitempty"`
 	Fields      Fields    `yaml:"-,inline"`
 }
 
+func (s *Service) UnmarshalYAML(value *yaml.Node) error {
+	type S Service
+	v := S(*s)
+	err := value.Decode(&v)
+	if err != nil {
+		return err
+	}
+	*s = Service(v)
+	if len(s.Networks) == 0 {
+		s.Networks = Networks{"default": {}}
+	}
+	return nil
+}
+
 type Deploy struct {
-	Labels StringMap `yaml:"labels"`
+	Labels StringMap `yaml:"labels,omitempty"`
 	Fields Fields    `yaml:"-,inline"`
 }
 
@@ -95,5 +110,59 @@ func (l *StringMap) UnmarshalYAML(value *yaml.Node) error {
 		values[line[:i]] = &s
 	}
 	*l = StringMap(values)
+	return nil
+}
+
+type Network struct {
+	Aliases     []string `yaml:"aliases,omitempty"`
+	IPv4Address string   `yaml:"ipv4_address,omitempty"`
+	IPv6Address string   `yaml:"ipv6_address,omitempty"`
+	Fields      Fields   `yaml:"-,inline"`
+}
+
+func (n Network) IsZero() bool {
+	return len(n.Aliases) == 0 && n.IPv4Address == "" && n.IPv6Address == "" && len(n.Fields) == 0
+}
+
+type Networks map[string]Network
+
+func (n Networks) Has(s string) bool {
+	_, ok := n[s]
+	return ok
+}
+
+func (n Networks) IsZero() bool {
+	d, ok := n["default"]
+	return len(n) == 1 && ok && d.IsZero()
+}
+
+func (n *Networks) UnmarshalYAML(value *yaml.Node) (err error) {
+	values := map[string]Network(*n)
+	if values == nil {
+		values = map[string]Network{}
+	}
+
+	falsyValues := map[string]*Network{}
+	err = value.Decode(&falsyValues)
+	if err == nil {
+		for k, v := range falsyValues {
+			if v == nil {
+				v = &Network{}
+			}
+			values[k] = *v
+		}
+		*n = Networks(values)
+		return nil
+	}
+
+	var lines []string
+	err = value.Decode(&lines)
+	if err != nil {
+		return err
+	}
+	for _, name := range lines {
+		values[name] = Network{}
+	}
+	*n = Networks(values)
 	return nil
 }

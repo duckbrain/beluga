@@ -5,8 +5,8 @@
 # In GitLab, this value would likely be set in the .gitlab-ci.yml as a literal block scalar string.
 
 services:
-  # {{ $port := .Service.Labels.Get "com.example.deploy.port" }}
-  # {{ if $port }}
+  {{ $port := .Service.Labels.Get "com.ec2software.port" }}
+  {{ if $port }}
   BELUGA:
     deploy:
       labels:
@@ -15,10 +15,8 @@ services:
         - 'traefik.http.services.{{ .Env.StackName }}.loadbalancer.server.port={{ $port }}'
         - 'traefik.http.routers.{{ .Env.StackName }}.entrypoints=web'
     networks:
-      - default
-      - proxy
-  # {{ end }}
+      - traefik
+  {{ end }}
 networks:
-  proxy:
-    external:
-      name: traefik
+  traefik:
+    external: true
