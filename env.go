@@ -3,6 +3,7 @@ package beluga
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -206,4 +207,13 @@ func (env Environment) Format(format EnvFormat, keys []string) ([]string, error)
 		values[i], err = format(key, env[key])
 	}
 	return values, err
+}
+
+var GitLabVarMatcher = regexp.MustCompile(`\${?([a-z0-9_\-]+)}?`)
+
+func (env Environment) Expand(r *regexp.Regexp, s string) string {
+	return r.ReplaceAllStringFunc(s, func(varName string) string {
+		varName = r.ReplaceAllString(varName, "$1")
+		return env[varName]
+	})
 }
