@@ -42,6 +42,8 @@ func gitlabEnvRead(e Environment) error {
 }
 
 func gitlabDomain(e Environment) string {
+	// If a global variable is used for the job>environment>url field, its
+	// variables will not be expanded as expected. This works around that.
 	s := e.Expand(GitLabVarMatcher, e["CI_ENVIRONMENT_URL"])
 	u, err := url.Parse(s)
 	if err != nil {
