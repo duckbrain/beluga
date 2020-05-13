@@ -2,9 +2,12 @@ package beluga
 
 import (
 	"net/url"
+	"regexp"
 )
 
 // See https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+
+var gitLabVarMatcher = regexp.MustCompile(`(?i)\$(\$|([a-z0-9_\-]+)|{([a-z0-9_\-]+)})`)
 
 func gitlabEnvRead(e Environment) error {
 	if e["GITLAB_CI"] == "" {
@@ -44,7 +47,7 @@ func gitlabEnvRead(e Environment) error {
 func gitlabDomain(e Environment) string {
 	// If a global variable is used for the job>environment>url field, its
 	// variables will not be expanded as expected. This works around that.
-	s := e.Expand(GitLabVarMatcher, e["CI_ENVIRONMENT_URL"])
+	s := e.expand(gitLabVarMatcher, e["CI_ENVIRONMENT_URL"])
 	u, err := url.Parse(s)
 	if err != nil {
 		return ""

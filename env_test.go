@@ -26,7 +26,7 @@ func TestEnvironmentExpand(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.input, func(t *testing.T) {
-			received := e.Expand(GitLabVarMatcher, tC.input)
+			received := e.expand(gitLabVarMatcher, tC.input)
 			if received != tC.output {
 				t.Errorf("expected %v, received %v", tC.output, received)
 			}

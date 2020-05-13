@@ -209,9 +209,7 @@ func (env Environment) Format(format EnvFormat, keys []string) ([]string, error)
 	return values, err
 }
 
-var GitLabVarMatcher = regexp.MustCompile(`(?i)\$(\$|([a-z0-9_\-]+)|{([a-z0-9_\-]+)})`)
-
-func (env Environment) Expand(r *regexp.Regexp, s string) string {
+func (env Environment) expand(r *regexp.Regexp, s string) string {
 	return r.ReplaceAllStringFunc(s, func(match string) string {
 		varName := ""
 		for _, v := range r.FindStringSubmatch(match) {
