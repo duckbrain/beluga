@@ -22,25 +22,27 @@ func gitlabEnvRead(e Environment) error {
 	} else if e["CI_COMMIT_REF_NAME"] == e[varDefaultBranch] {
 		environment = envStaging
 	}
-	domain := gitlabDomain(e)
 
 	env.MergeMissing(Environment{
 		varEnvironment:      environment,
 		varRegistry:         e["CI_REGISTRY"],
 		varRegistryUsername: e.Get("CI_REGISTRY_USER", "gitlab-ci-token"),
 		varRegistryPassword: e["CI_REGISTRY_PASSWORD"],
-		varDomain:           domain,
 		varStackName:        e["CI_PROJECT_PATH_SLUG"],
 		varImagesTemplate:   `{{.Env.CI_REGISTRY_IMAGE}}:{{if .Env.CI_COMMIT_TAG}}{{.Env.CI_COMMIT_TAG}} {{.Env.CI_REGISTRY_IMAGE}}:latest{{else}}{{.Env.CI_COMMIT_REF_NAME}}{{end}}`,
 	})
 
 	e.MergeMissing(env)
 
+	// We'll do domain last, so it can include all other vars up to this point.
+	domain := gitlabDomain(e)
+	e.MergeMissing(Environment{varDomain: domain})
+
 	return nil
 }
 
 func gitlabDomain(e Environment) string {
-	s := e["CI_ENVIRONMENT_URL"]
+	s := e.Expand(GitLabVarMatcher, e["CI_ENVIRONMENT_URL"])
 	u, err := url.Parse(s)
 	if err != nil {
 		return ""

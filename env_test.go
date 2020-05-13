@@ -8,16 +8,20 @@ func TestEnvironmentExpand(t *testing.T) {
 	e := Environment{"HELLO": "world", "FOO": "bar"}
 
 	testCases := []struct {
-		input string
+		input  string
 		output string
 	}{
 		{
-			input: "http://$HELLO/${FOO}",
+			input:  "http://$HELLO/${FOO}",
 			output: "http://world/bar",
 		},
 		{
-			input: "http://$HELLO/A$BAZ",
+			input:  "http://$HELLO/A$BAZ",
 			output: "http://world/A",
+		},
+		{
+			input:  "http$$://$HELLO}/${FOO",
+			output: "http$://world}/${FOO",
 		},
 	}
 	for _, tC := range testCases {
@@ -28,9 +32,4 @@ func TestEnvironmentExpand(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestEnvironmentExand(t *testing.T) {
-
-
 }
