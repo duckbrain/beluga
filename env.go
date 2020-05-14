@@ -3,6 +3,7 @@ package beluga
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -171,10 +172,8 @@ func envParseImageTemplate(e Environment) error {
 }
 
 func envVarDefaults(e Environment) error {
-	e.MergeMissing(Environment{
-		varContext:    ".",
-		varDockerfile: "Dockerfile",
-	})
+	e.MergeMissing(Environment{varContext: "."})
+	e.MergeMissing(Environment{varDockerfile: filepath.Join(e.Context(), "Dockerfile")})
 	return nil
 }
 
