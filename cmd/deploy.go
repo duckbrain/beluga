@@ -8,7 +8,7 @@ import (
 
 var deployCmd = &cobra.Command{
 	Use:     "deploy",
-	Aliases: []string{"breach"},
+	Aliases: []string{"breach", "publish"},
 	Short:   "Deploy an application to a docker daemon",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runner.Deploy(ctx)
