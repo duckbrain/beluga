@@ -92,8 +92,8 @@ func (d dockerRunner) Build(ctx context.Context, context, dockerfile, tag string
 	return d.Exec(exec.CommandContext(ctx,
 		"docker", "build",
 		context,
-		"-f", dockerfile,
-		"-t", tag,
+		"--file", dockerfile,
+		"--tag", tag,
 	))
 }
 
@@ -106,12 +106,14 @@ func (d dockerRunner) Push(ctx context.Context, tag string) error {
 }
 
 func (d dockerRunner) Login(ctx context.Context, hostname, username, password string) error {
-	return d.Exec(exec.CommandContext(ctx,
+	c := exec.CommandContext(ctx,
 		"docker", "login",
 		hostname,
-		"-u", username,
-		"-p", password,
-	))
+		"--username", username,
+		"--password-stdin",
+	)
+	c.Stdin = bytes.NewBufferString(password)
+	return d.Exec(c)
 }
 
 func (d dockerRunner) ComposeConfig(ctx context.Context) (string, error) {
