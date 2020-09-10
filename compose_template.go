@@ -11,27 +11,38 @@ import (
 type composeTemplateData struct {
 	Src     *compose.File
 	Service *compose.Service
+	Volume  *compose.VolumeDefinition
 	Env     Environment
 }
 
-func composeTemplate(og, tmp string, env Environment) (string, error) {
-	if len(tmp) == 0 {
-		return og, nil
+const tmplKey = "BELUGA"
+
+func composeTemplate(src, tmpl string, env Environment) (string, error) {
+	if len(tmpl) == 0 {
+		return src, nil
 	}
 
-	t, err := template.New("").Parse(tmp)
+	t, err := template.New("").Parse(tmpl)
 	if err != nil {
 		return "", errors.Wrap(err, "parse template")
 	}
 
-	file, err := compose.Parse(og)
+	file, err := compose.Parse(src)
 	if err != nil {
 		return "", errors.Wrap(err, "yaml parse source")
 	}
 
-	parseTemplate := func(service *compose.Service) (*compose.File, error) {
+	parseTemplate := func(data composeTemplateData) (*compose.File, error) {
 		s := new(bytes.Buffer)
-		err := t.Execute(s, composeTemplateData{file, service, env})
+		data.Env = env
+		data.Src = file
+		if data.Service == nil {
+			data.Service = &compose.Service{}
+		}
+		if data.Volume == nil {
+			data.Volume = &compose.VolumeDefinition{}
+		}
+		err := t.Execute(s, data)
 		if err != nil {
 			return nil, errors.Wrap(err, "execute template")
 		}
@@ -39,7 +50,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 		return f, errors.Wrap(err, "yaml parse template output")
 	}
 
-	tFile, err := parseTemplate(&compose.Service{})
+	tFile, err := parseTemplate(composeTemplateData{})
 	if err != nil {
 		return "", err
 	}
@@ -50,12 +61,12 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 	}
 
 	for name, service := range file.Services {
-		tFile, err := parseTemplate(service)
+		tFile, err := parseTemplate(composeTemplateData{Service: service})
 		if err != nil {
 			return "", errors.Wrapf(err, "service \"%v\"", name)
 		}
 
-		if tService, ok := tFile.Services["BELUGA"]; ok {
+		if tService, ok := tFile.Services[tmplKey]; ok {
 			err = service.Merge(tService)
 			if err != nil {
 				return "", errors.Wrapf(err, "merge service %v", name)
@@ -66,7 +77,7 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 	}
 
 	for name, tService := range tFile.Services {
-		if name == "BELUGA" {
+		if name == tmplKey {
 			continue
 		}
 		service, ok := file.Services[name]
@@ -78,6 +89,38 @@ func composeTemplate(og, tmp string, env Environment) (string, error) {
 			file.Services[name] = service
 		} else {
 			file.Services[name] = tService
+		}
+	}
+
+	for name, volume := range file.Volumes {
+		tFile, err := parseTemplate(composeTemplateData{Volume: &volume})
+		if err != nil {
+			return "", errors.Wrapf(err, "volume \"%v\"", name)
+		}
+
+		if tVolume, ok := tFile.Volumes[tmplKey]; ok {
+			err = volume.Merge(&tVolume)
+			if err != nil {
+				return "", errors.Wrapf(err, "merge volume %v", name)
+			}
+		}
+
+		file.Volumes[name] = volume
+	}
+
+	for name, tVolume := range tFile.Volumes {
+		if name == tmplKey {
+			continue
+		}
+		volume, ok := file.Volumes[name]
+		if ok {
+			err = volume.Merge(&tVolume)
+			if err != nil {
+				return "", errors.Wrapf(err, "merge template volume %v", name)
+			}
+			file.Volumes[name] = volume
+		} else {
+			file.Volumes[name] = tVolume
 		}
 	}
 

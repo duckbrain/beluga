@@ -110,6 +110,8 @@ services:
 			VERSION: '2'
 		labels:
 			com.example.deploy.port: 8080
+volumes:
+	myvolume: {}
 `,
 			template: `
 services:
@@ -128,6 +130,11 @@ services:
 networks:
 	traefik:
 		external: true
+volumes:
+	BELUGA:
+		driver: glusterfs
+		driver_opts:
+			subdir: ./some_dir
 `,
 			env: Environment{varStackName: "foobar"},
 			output: `
@@ -151,6 +158,11 @@ services:
 networks:
 	traefik:
 		external: true
+volumes:
+	myvolume:
+		driver: glusterfs
+		driver_opts:
+			subdir: ./some_dir
 `,
 		},
 	}

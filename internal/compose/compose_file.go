@@ -27,8 +27,9 @@ func MustParse(s string) *File {
 }
 
 type File struct {
-	Services map[string]*Service `yaml:"services"`
-	Fields   Fields              `yaml:"-,inline"`
+	Services map[string]*Service         `yaml:"services"`
+	Volumes  map[string]VolumeDefinition `yaml:"volumes"`
+	Fields   Fields                      `yaml:"-,inline"`
 }
 
 func (f *File) Merge(a *File) error {
@@ -203,4 +204,12 @@ func (n *Networks) UnmarshalYAML(value *yaml.Node) (err error) {
 	}
 	*n = Networks(values)
 	return nil
+}
+
+type VolumeDefinition struct {
+	Fields Fields `yaml:"-,inline"`
+}
+
+func (s *VolumeDefinition) Merge(a *VolumeDefinition) error {
+	return mergo.MergeWithOverwrite(s, *a)
 }
