@@ -4,10 +4,11 @@ package beluga
 
 const (
 	varApplication      = "BELUGA_APPLICATION"
-	varComposeFile      = "BELUGA_COMPOSE_FILE"
+	varComposeFile      = "COMPOSE_FILE"
 	varComposeTemplate  = "BELUGA_COMPOSE_TEMPLATE"
 	varContext          = "BELUGA_CONTEXT"
 	varDefaultBranch    = "BELUGA_DEFAULT_BRANCH"
+	varDockerHost       = "DOCKER_HOST"
 	varDockerfile       = "BELUGA_DOCKERFILE"
 	varDomain           = "BELUGA_DOMAIN"
 	varEnvironment      = "BELUGA_ENVIRONMENT"
@@ -28,6 +29,7 @@ var knownVarNames = []string{
 	varComposeTemplate,
 	varContext,
 	varDefaultBranch,
+	varDockerHost,
 	varDockerfile,
 	varDomain,
 	varEnvironment,
@@ -47,37 +49,38 @@ func (e Environment) Application() string {
 	return e[varApplication]
 }
 
-// A template docker-compose file that may contain modifies the compose file
-// to work in different contexts
+// Compose file(s) for deploying
+func (e Environment) ComposeFile() string {
+	return e[varComposeFile]
+}
+
+// A template docker-compose file that may contain mutations for the compose
+// file
 func (e Environment) ComposeTemplate() string {
 	return e[varComposeTemplate]
 }
 
-// Context of the docker build, defaults to root of the project
+// Docker build context
 func (e Environment) Context() string {
 	return e[varContext]
 }
 
-// Dockerfile to use in docker build, defaults `Dockerfile` in the context
-// directory (like docker does)
+// Dockerfile to build
 func (e Environment) Dockerfile() string {
 	return e[varDockerfile]
 }
 
-// Domain name to deploy the stack to. This will be passed to the environment
-// when doing the docker deploy, so the compose file can reference this
-// appropriately.
+// Domain name of the stack
 func (e Environment) Domain() string {
 	return e[varDomain]
 }
 
-// Environment to deploy to. "review", "staging", "production" are defaults,
-// but any string may be used.
+// Environment name
 func (e Environment) Environment() string {
 	return e[varEnvironment]
 }
 
-// Primary (first) Docker image to push after build
+// First image listed in BELUGA_IMAGES; doesn't affect pushng
 func (e Environment) Image() string {
 	return e[varImage]
 }
@@ -98,21 +101,22 @@ func (e Environment) Overrides() string {
 	return e[varOverrides]
 }
 
-// Docker registry to log into before pushing
+// Docker registry for pushing
 func (e Environment) Registry() string {
 	return e[varRegistry]
 }
 
-// Password to use to log into Docker registry
+// Password for Docker registry
 func (e Environment) RegistryPassword() string {
 	return e[varRegistryPassword]
 }
 
-// Username to use to log into Docker registry
+// Username for Docker registry
 func (e Environment) RegistryUsername() string {
 	return e[varRegistryUsername]
 }
 
+// Name of the compose/swamrm/etc. stack
 func (e Environment) StackName() string {
 	return e[varStackName]
 }

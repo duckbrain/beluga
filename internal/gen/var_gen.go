@@ -17,6 +17,10 @@ type Var struct {
 	Name       string
 	OmitGetter bool
 	OmitPrefix bool
+	OmitDocs   bool
+	Computed   string
+	DefaultTo  string
+	Categories []string
 	Desc       string
 }
 
@@ -34,24 +38,83 @@ func (v Vars) Swap(i, j int) {
 	v[i], v[j] = v[j], v[i]
 }
 
+type varOp func(*Var)
+
+func omitGetter(v *Var) {
+	v.OmitGetter = true
+}
+func omitPrefix(v *Var) {
+	v.OmitPrefix = true
+}
+func unused(v *Var) {
+	v.OmitDocs = true
+}
+func build(v *Var) {
+	v.Categories = append(v.Categories, "Build")
+}
+func deploy(v *Var) {
+	v.Categories = append(v.Categories, "Deploy")
+}
+func computed(v *Var) {
+	v.Computed = "yes"
+}
+func defaultTo(s string) varOp {
+	return func(v *Var) {
+		v.DefaultTo = s
+	}
+}
+
+func nVar(name, desc string, ops ...varOp) Var {
+	v := Var{Name: name, Desc: desc}
+	for _, o := range ops {
+		o(&v)
+	}
+	return v
+}
+
 var vars = Vars{
-	{Name: "Application", Desc: "If provided, name of the (sub)application to compile"},
-	{Name: "ComposeFile", Desc: "Used by docker-compose to find docker-compose file(s) for deploying", OmitGetter: true},
-	{Name: "Context", Desc: "Context of the docker build, defaults to root of the project"},
-	{Name: "Dockerfile", Desc: "Dockerfile to use in docker build, defaults `Dockerfile` in the context directory (like docker does)"},
-	{Name: "ComposeTemplate", Desc: "A template docker-compose file that may contain modifies the compose file to work in different contexts"},
-	{Name: "Domain", Desc: "Domain name to deploy the stack to. This will be passed to the environment when doing the docker deploy, so the compose file can reference this appropriately."},
-	{Name: "Environment", Desc: "Environment to deploy to. \"review\", \"staging\", \"production\" are defaults, but any string may be used."},
-	{Name: "DefaultBranch", Desc: "Target branch for PRs/MRs. Defaults to master.", OmitGetter: true},
-	{Name: "Image", Desc: "Primary (first) Docker image to push after build"},
-	{Name: "Images", Desc: "Docker images to push after build"},
-	{Name: "Overrides", Desc: "YAML document with environment names or patterns as keys and variables to override as values"},
-	{Name: "ImagesTemplate", Desc: "Go template for a space-separated list of Docker images to push after build"},
-	{Name: "Registry", Desc: "Docker registry to log into before pushing"},
-	{Name: "RegistryPassword", Desc: "Password to use to log into Docker registry"},
-	{Name: "RegistryUsername", Desc: "Username to use to log into Docker registry"},
-	{Name: "StackName", Desc: ""},
-	{Name: "Version", Desc: "Version of the application being built/deployed"},
+	nVar("Application", "If provided, name of the (sub)application to compile", unused, computed),
+	nVar("ComposeFile", "Compose file(s) for deploying", omitPrefix, deploy),
+	nVar("ComposeTemplate", "A template docker-compose file that may contain mutations for the compose file", deploy),
+	nVar("Context", "Docker build context", build, defaultTo("<project root>")),
+	nVar("DefaultBranch", "Target branch to compare for BELUGA_ENVIROMENT.", omitGetter, defaultTo("`master`")),
+	nVar("Dockerfile", "Dockerfile to build", build, defaultTo("`Dockerfile` in context")),
+	nVar("DockerHost", "Docker instance for building/deployin", build, deploy, omitGetter, omitPrefix),
+	nVar("Domain", "Domain name of the stack", deploy, computed),
+	nVar("Environment", "Environment name", deploy, computed, defaultTo("`review`, `staging`, or `production`")),
+	nVar("Image", "First image listed in BELUGA_IMAGES; doesn't affect pushng", computed, deploy),
+	nVar("Images", "Docker images to push after build", computed, build, deploy),
+	nVar("ImagesTemplate", "Go template for a space-separated list of Docker images to push after build", defaultTo("yes")),
+	nVar("Overrides", "YAML document with environment names or patterns as keys and variables to override as values"),
+	nVar("Registry", "Docker registry for pushing", build),
+	nVar("RegistryPassword", "Password for Docker registry", build),
+	nVar("RegistryUsername", "Username for Docker registry", build),
+	nVar("StackName", "Name of the compose/swamrm/etc. stack", deploy),
+	nVar("Version", "Version of the application being built/deployed", computed, deploy),
+}
+
+var varsByCategory map[string]Vars
+var categories []string
+
+func init() {
+	m := make(map[string]Vars)
+	uncategorized := Vars{}
+	for _, v := range vars {
+		for _, c := range v.Categories {
+			m[c] = append(m[c], v)
+		}
+		if len(v.Categories) == 0 {
+			uncategorized = append(uncategorized, v)
+		}
+	}
+	m["Uncategorized"] = uncategorized
+
+	categories = make([]string, 0, len(m))
+	for c := range m {
+		categories = append(categories, c)
+	}
+	sort.Strings(categories)
+	varsByCategory = m
 }
 
 var t = template.Must(template.New("").Parse(`
@@ -60,17 +123,17 @@ var t = template.Must(template.New("").Parse(`
 package beluga
 
 const (
-	{{- range .}}
+	{{- range .Variables}}
 	{{ .VarName }} = "{{ .EnvName }}"
 	{{- end }}
 )
 
 var knownVarNames = []string{
-	{{range .}}
+	{{range .Variables}}
 	{{- .VarName }},
 {{end}} }
 
-{{ range .}}
+{{ range .Variables}}
 {{- if not .OmitGetter }}
 {{.Comment}}
 func (e Environment) {{ .GoName }}() string {
@@ -81,25 +144,45 @@ func (e Environment) {{ .GoName }}() string {
 `))
 
 var mt = template.Must(template.New("").Parse(`
+{{- define "table" -}}
+| Name | Description | Default | Computed |
+| ---- | ----------- | ------- | -------- |
+{{- range . -}}
+	{{- if not .OmitDocs }}
+| {{ .EnvName }} | {{ .Desc }} | {{ .DefaultTo }} | {{ .Computed }} |
+	{{- end -}}
+{{- end -}}
+{{- end -}}
+
 <!-- DO NOT EDIT: This file is generated by var_gen.go -->
 
 # Beluga Environment Variables
 
-The following environment variables can be set to override the default functionality of beluga.
+{{ range .Categories -}}
 
-| Name | Description |
-| ---- | ----------- |
-{{- range .}}
-| {{ .EnvName }} | {{ .Desc }} |
-{{- end -}}
+## {{ . }}
+
+{{ template "table" (index $.VariablesByCategory .) }}
+
+{{ end -}}
 `))
+
+type Ctx struct {
+	Variables           Vars
+	Categories          []string
+	VariablesByCategory map[string]Vars
+}
 
 func templateToFile(t *template.Template, filename string) error {
 	output, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
-	err = t.Execute(output, vars)
+	err = t.Execute(output, Ctx{
+		Variables:           vars,
+		Categories:          categories,
+		VariablesByCategory: varsByCategory,
+	})
 	if err != nil {
 		return err
 	}
