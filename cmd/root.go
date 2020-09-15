@@ -30,7 +30,9 @@ to quickly create a Cobra application.`,
 			l.SetLevel(logrus.FatalLevel)
 			runner.Logger = l
 		}
-		return runner.Env.Validate()
+		return nil
+		// TODO categorize vars by operation and validate per op.
+		// return runner.Env.Validate()
 	},
 }
 
