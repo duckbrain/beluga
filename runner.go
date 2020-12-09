@@ -67,7 +67,7 @@ func (r *Runner) Deploy(ctx context.Context) error {
 }
 
 func (r *Runner) Teardown(ctx context.Context) error {
-	return r.deployer().Deploy(ctx, r)
+	return r.deployer().Teardown(ctx, r)
 }
 
 type BuildOpts struct {
