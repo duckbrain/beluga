@@ -140,6 +140,10 @@ func envReadEnvOverrides(e Environment) error {
 		return nil
 	}
 
+	for name, val := range env {
+		env[name] = e.expand(gitLabVarMatcher, val)
+	}
+
 	e.Merge(env)
 
 	return nil

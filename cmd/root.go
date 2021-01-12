@@ -17,7 +17,7 @@ var quiet = false
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "beluga",
-	Short: "CLI for communicating with the belugad service with detection for CI environments for auto configuration",
+	Short: "CLI for communicating with a Docker agent ",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
 
