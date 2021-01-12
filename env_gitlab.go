@@ -20,7 +20,8 @@ func gitlabEnvRead(e Environment) error {
 
 	var environment = envReview
 	env := parseVersion(e["CI_COMMIT_TAG"])
-	if env[varEnvironment] != "" {
+	if env[varVersion] != "" {
+		// A version has been tagged
 		environment = envProduction
 	} else if e["CI_COMMIT_REF_NAME"] == e[varDefaultBranch] {
 		environment = envStaging
