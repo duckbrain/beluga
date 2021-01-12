@@ -134,7 +134,7 @@ volumes:
 	BELUGA:
 		driver: glusterfs
 		driver_opts:
-			subdir: ./some_dir
+			subdir: ./some_dir/{{ .VolumeName }}
 `,
 			env: Environment{varStackName: "foobar"},
 			output: `
@@ -162,7 +162,7 @@ volumes:
 	myvolume:
 		driver: glusterfs
 		driver_opts:
-			subdir: ./some_dir
+			subdir: ./some_dir/myvolume
 `,
 		},
 	}

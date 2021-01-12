@@ -9,10 +9,12 @@ import (
 )
 
 type composeTemplateData struct {
-	Src     *compose.File
-	Service *compose.Service
-	Volume  *compose.VolumeDefinition
-	Env     Environment
+	Src         *compose.File
+	Service     *compose.Service
+	ServiceName string
+	Volume      *compose.VolumeDefinition
+	VolumeName  string
+	Env         Environment
 }
 
 const tmplKey = "BELUGA"
@@ -61,7 +63,7 @@ func composeTemplate(src, tmpl string, env Environment) (string, error) {
 	}
 
 	for name, service := range file.Services {
-		tFile, err := parseTemplate(composeTemplateData{Service: service})
+		tFile, err := parseTemplate(composeTemplateData{Service: service, ServiceName: name})
 		if err != nil {
 			return "", errors.Wrapf(err, "service \"%v\"", name)
 		}
@@ -93,7 +95,7 @@ func composeTemplate(src, tmpl string, env Environment) (string, error) {
 	}
 
 	for name, volume := range file.Volumes {
-		tFile, err := parseTemplate(composeTemplateData{Volume: &volume})
+		tFile, err := parseTemplate(composeTemplateData{Volume: &volume, VolumeName: name})
 		if err != nil {
 			return "", errors.Wrapf(err, "volume \"%v\"", name)
 		}
