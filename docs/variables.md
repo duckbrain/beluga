@@ -8,7 +8,7 @@
 | ---- | ----------- | ------- | -------- |
 | BELUGA_CONTEXT | Docker build context | <project root> |  |
 | BELUGA_DOCKERFILE | Dockerfile to build | `Dockerfile` in context |  |
-| DOCKER_HOST | Docker instance for building/deployin |  |  |
+| DOCKER_HOST | Docker instance for building |  |  |
 | BELUGA_IMAGES | Docker images to push after build |  | yes |
 | BELUGA_REGISTRY | Docker registry for pushing |  |  |
 | BELUGA_REGISTRY_PASSWORD | Password for Docker registry |  |  |
@@ -20,7 +20,7 @@
 | ---- | ----------- | ------- | -------- |
 | COMPOSE_FILE | Compose file(s) for deploying |  |  |
 | BELUGA_COMPOSE_TEMPLATE | A template docker-compose file that may contain mutations for the compose file |  |  |
-| DOCKER_HOST | Docker instance for building/deployin |  |  |
+| BELUGA_DEPLOY_DSN | Docker instance for deploying |  |  |
 | BELUGA_DOMAIN | Domain name of the stack |  | yes |
 | BELUGA_ENVIRONMENT | Environment name | `review`, `staging`, or `production` | yes |
 | BELUGA_IMAGE | First image listed in BELUGA_IMAGES; doesn't affect pushng |  | yes |

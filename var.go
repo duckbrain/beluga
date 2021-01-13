@@ -8,6 +8,7 @@ const (
 	varComposeTemplate  = "BELUGA_COMPOSE_TEMPLATE"
 	varContext          = "BELUGA_CONTEXT"
 	varDefaultBranch    = "BELUGA_DEFAULT_BRANCH"
+	varDeployDSN        = "BELUGA_DEPLOY_DSN"
 	varDockerHost       = "DOCKER_HOST"
 	varDockerfile       = "BELUGA_DOCKERFILE"
 	varDomain           = "BELUGA_DOMAIN"
@@ -29,6 +30,7 @@ var knownVarNames = []string{
 	varComposeTemplate,
 	varContext,
 	varDefaultBranch,
+	varDeployDSN,
 	varDockerHost,
 	varDockerfile,
 	varDomain,
@@ -63,6 +65,11 @@ func (e Environment) ComposeTemplate() string {
 // Docker build context
 func (e Environment) Context() string {
 	return e[varContext]
+}
+
+// Docker instance for deploying
+func (e Environment) DeployDSN() string {
+	return e[varDeployDSN]
 }
 
 // Dockerfile to build

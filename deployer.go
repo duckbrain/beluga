@@ -28,7 +28,7 @@ func (d dummyTransport) RoundTrip(*http.Request) (*http.Response, error) {
 }
 
 func (r Runner) deployer() Deployer {
-	host := r.Env["DOCKER_HOST"]
+	host := r.Env.DeployDSN()
 
 	if i := strings.Index(host, ":"); i > 0 {
 		switch host[:i] {
