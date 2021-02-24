@@ -289,7 +289,8 @@ func (c *portainerDeploy) Deploy(ctx context.Context, opts DeployOpts) error {
 		return errors.Wrap(err, "compose file contents")
 	}
 	name := opts.StackName()
-	c.Client.Logger.Printf("Deploying with portainer %v in %v\n%v", name, composeFileContents)
+
+	c.Client.Logger.Printf("Deploying with portainer stack: %v; contents: %v", name, composeFileContents)
 
 	return c.tryEndpoints(func(endpoint portainer.Endpoint) error {
 		stack, err := c.findStack(endpoint.ID, name)
