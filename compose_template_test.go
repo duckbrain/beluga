@@ -165,6 +165,67 @@ volumes:
 			subdir: ./some_dir/myvolume
 `,
 		},
+		{
+			desc: "lack of volumes doesn't cause crash",
+			original: `
+version: '3.0'
+
+services: 
+	hello:
+		image: hello-world
+		environment:
+			VERSION: '2'
+		labels:
+			com.example.deploy.port: 8080
+`,
+			template: `
+services:
+	{{ $port := .Service.Labels.Get "com.example.deploy.port" }}
+	{{ if $port }}
+	BELUGA:
+		deploy:
+			labels:
+				- traefik.enable=true
+				- traefik.http.routers.{{ .Env.StackName }}.rule=Host(` + "{{ .Env.Domain }}" + `)
+				- traefik.http.services.{{ .Env.StackName }}.loadbalancer.server.port={{ $port }}
+				- traefik.http.routers.{{ .Env.StackName }}.entrypoints=web
+		networks:
+			- traefik
+	{{ end }}
+networks:
+	traefik:
+		external: true
+volumes:
+	BELUGA:
+		driver: glusterfs
+		driver_opts:
+			subdir: ./some_dir/{{ .VolumeName }}
+`,
+			env: Environment{varStackName: "foobar"},
+			output: `
+version: '3.0'
+
+services: 
+	hello:
+		deploy:
+			labels:
+				traefik.enable: "true"
+				traefik.http.routers.foobar.entrypoints: web
+				traefik.http.routers.foobar.rule: Host()
+				traefik.http.services.foobar.loadbalancer.server.port: "8080"
+		image: hello-world
+		environment:
+			VERSION: '2'
+		labels:
+			com.example.deploy.port: 8080
+		networks:
+		- traefik
+networks:
+	traefik:
+		external: true
+volumes:
+`,
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

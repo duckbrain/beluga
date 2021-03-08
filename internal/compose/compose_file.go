@@ -33,6 +33,12 @@ type File struct {
 }
 
 func (f *File) Merge(a *File) error {
+	if f.Volumes == nil {
+		f.Volumes = make(map[string]VolumeDefinition)
+	}
+	if a.Volumes == nil {
+		a.Volumes = make(map[string]VolumeDefinition)
+	}
 	return mergo.MergeWithOverwrite(&f.Fields, a.Fields)
 }
 
