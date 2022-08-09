@@ -15,6 +15,7 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.8.0
 	github.com/spf13/cobra v1.1.3
+	github.com/stretchr/testify v1.4.0
 	golang.org/x/sys v0.0.0-20210308170721-88b6017d0656 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

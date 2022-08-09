@@ -117,7 +117,7 @@ func (env Env) MarshalJSON() ([]byte, error) {
 	return json.Marshal(values)
 }
 
-func (env Env) UnmarshalJSON(data []byte) error {
+func (env *Env) UnmarshalJSON(data []byte) error {
 	type entry struct {
 		Name  string `json:"name"`
 		Value string `json:"value"`
@@ -128,7 +128,10 @@ func (env Env) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	for _, entry := range values {
-		env[entry.Name] = entry.Value
+		if *env == nil {
+			*env = make(Env)
+		}
+		(*env)[entry.Name] = entry.Value
 	}
 	return nil
 }
